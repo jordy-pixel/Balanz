@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Balanz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1C1712;
+    --ink-2:#241E17;
+    --surface:#2E2720;
+    --surface-2:#38302A;
+    --line:#4A4032;
+    --chalk:#F3F0E9;
+    --chalk-dim:#C4BCAE;
+    --muted:#96897A;
+    --amber:#D6D53E;
+    --amber-dim:#7D7C22;
+    --teal:#B08D5B;
+    --red:#E2574C;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--chalk);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .display{font-family:'Bebas Neue',sans-serif; letter-spacing:0.02em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  #app{min-height:100vh; display:flex; flex-direction:column;}
+
+  /* ---------- Login / setup screen ---------- */
+  .login-wrap{
+    flex:1; display:flex; align-items:center; justify-content:center; padding:24px;
+    position:relative; overflow:hidden;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(214,213,62,0.20), transparent 42%),
+      radial-gradient(circle at 85% 15%, rgba(176,141,91,0.22), transparent 46%),
+      radial-gradient(circle at 30% 90%, rgba(214,213,62,0.14), transparent 50%),
+      radial-gradient(circle at 90% 85%, rgba(176,141,91,0.16), transparent 48%),
+      var(--ink);
+    background-size:180% 180%, 180% 180%, 180% 180%, 180% 180%, 100% 100%;
+    animation: gradientDrift 22s ease-in-out infinite;
+  }
+  @keyframes gradientDrift{
+    0%,100%{ background-position: 0% 0%, 100% 0%, 20% 100%, 100% 100%, 0 0; }
+    50%{ background-position: 25% 30%, 70% 35%, 45% 75%, 65% 70%, 0 0; }
+  }
+  .login-wrap::before{
+    content:""; position:absolute; left:0; right:0; bottom:-6%; height:60%; pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 300' preserveAspectRatio='none'%3E%3Cpath d='M0 180 C 200 60, 350 260, 550 140 S 900 20, 1200 160 L1200 300 L0 300 Z' fill='%23D6D53E' opacity='0.05'/%3E%3Cpath d='M0 220 C 250 320, 420 100, 650 200 S 950 300, 1200 200 L1200 300 L0 300 Z' fill='%23B08D5B' opacity='0.07'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-size:cover; background-position:bottom;
+  }
+  .login-card{
+    width:100%; max-width:420px; background:var(--surface); border:1px solid var(--line);
+    border-radius:var(--radius); padding:36px 32px; position:relative; overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.04) inset;
+    animation: cardEnter .6s cubic-bezier(.2,.8,.25,1) both;
+  }
+  @keyframes cardEnter{
+    from{ opacity:0; transform:translateY(18px) scale(.98); }
+    to{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  .login-card::before{
+    content:""; position:absolute; top:-60px; right:-60px; width:200px; height:200px;
+    background:radial-gradient(circle, rgba(214,213,62,0.3), transparent 70%);
+  }
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.18em; color:var(--amber);
+    text-transform:uppercase; margin-bottom:6px;
+  }
+  .login-logo{
+    display:block; max-width:220px; max-height:110px; width:auto; height:auto; margin:0 auto 20px auto;
+    filter:drop-shadow(0 0 26px rgba(214,213,62,0.35));
+  }
+  .brand-title{
+    font-family:'Bebas Neue',sans-serif; font-size:50px; line-height:0.92; margin:0 0 4px 0; color:var(--chalk);
+  }
+  .brand-tagline{color:var(--muted); font-size:14px; margin-bottom:28px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:12px; color:var(--chalk-dim); margin-bottom:6px; letter-spacing:0.03em;}
+  .field input, .field select, .field textarea{
+    width:100%; background:var(--ink-2); border:1px solid var(--line); color:var(--chalk);
+    padding:12px 14px; border-radius:9px; font-size:15px; font-family:'Inter',sans-serif;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--amber); outline-offset:1px; border-color:var(--amber);}
+  .code-input{font-family:'IBM Plex Mono',monospace; letter-spacing:0.28em; text-transform:uppercase; font-size:20px; text-align:center;}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    background:linear-gradient(180deg, #EDEB7E, var(--amber) 55%); color:#20140A; border:none; padding:12px 22px; border-radius:9px;
+    font-weight:700; font-size:14px; cursor:pointer; letter-spacing:0.02em;
+    transition:transform .14s ease, filter .14s ease, box-shadow .14s ease;
+    font-family:'Inter',sans-serif; box-shadow:0 4px 14px rgba(214,213,62,0.25), inset 0 1px 0 rgba(255,255,255,0.25);
+  }
+  .btn:hover{filter:brightness(1.06); transform:translateY(-1px); box-shadow:0 8px 20px rgba(214,213,62,0.32), inset 0 1px 0 rgba(255,255,255,0.25);}
+  .btn:active{transform:translateY(0) scale(0.98); box-shadow:0 2px 8px rgba(214,213,62,0.25);}
+  .btn.full{width:100%;}
+  .btn.ghost{background:var(--surface-2); color:var(--chalk); border:1px solid var(--line); box-shadow:none;}
+  .btn.ghost:hover{border-color:var(--amber); color:var(--amber); transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,0.25);}
+  .btn.danger{background:linear-gradient(180deg, #F17A70, var(--red) 60%); color:#2A0908; box-shadow:0 4px 14px rgba(226,87,76,0.25), inset 0 1px 0 rgba(255,255,255,0.2);}
+  .btn.small{padding:8px 14px; font-size:12px; border-radius:7px;}
+  .btn.teal{background:linear-gradient(180deg, #C7A876, var(--teal) 60%); color:#241A0E; box-shadow:0 4px 14px rgba(176,141,91,0.25), inset 0 1px 0 rgba(255,255,255,0.2);}
+  .divider{display:flex; align-items:center; gap:12px; margin:22px 0; color:var(--muted); font-size:12px;}
+  .divider::before, .divider::after{content:""; flex:1; height:1px; background:var(--line);}
+  .error-msg{color:var(--red); font-size:13px; margin-top:-6px; margin-bottom:14px;}
+  .hint{color:var(--muted); font-size:12.5px; margin-top:8px; line-height:1.5;}
+  .code-reveal{
+    background:var(--ink-2); border:1px dashed var(--amber); border-radius:10px; padding:18px;
+    text-align:center; margin:16px 0;
+  }
+  .code-reveal .code{font-family:'IBM Plex Mono',monospace; font-size:28px; letter-spacing:0.3em; color:var(--amber); font-weight:600;}
+
+  /* ---------- Shell ---------- */
+  header.top{
+    display:flex; align-items:center; justify-content:space-between; padding:16px 24px;
+    border-bottom:1px solid var(--line); background:linear-gradient(180deg, var(--ink-2), var(--ink)); position:sticky; top:0; z-index:10;
+    box-shadow:0 4px 18px rgba(0,0,0,0.25);
+  }
+  .top-left{display:flex; align-items:center; gap:12px;}
+  .logo-mark{height:36px; width:auto; flex-shrink:0;}
+  .top-left .display{font-size:26px; color:var(--chalk); line-height:1;}
+  .role-badge{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; padding:4px 9px; border-radius:6px;
+    background:rgba(214,213,62,0.15); color:var(--amber); letter-spacing:0.06em; text-transform:uppercase;
+    border:1px solid rgba(214,213,62,0.3);
+  }
+  .role-badge.trainer{background:rgba(176,141,91,0.18); color:var(--teal); border-color:rgba(176,141,91,0.35);}
+  .top-right{display:flex; align-items:center; gap:12px;}
+  .who{color:var(--chalk-dim); font-size:13px;}
+
+  nav.tabs{
+    display:flex; gap:6px; padding:12px 24px; background:var(--ink-2); overflow-x:auto;
+    border-bottom:1px solid var(--line);
+  }
+  nav.tabs button{
+    display:inline-flex; align-items:center; gap:7px;
+    background:transparent; border:1px solid transparent; color:var(--muted); padding:9px 14px 9px 12px; font-size:13.5px;
+    font-weight:600; cursor:pointer; border-radius:8px; white-space:nowrap; font-family:'Inter',sans-serif;
+    transition:background .12s ease, color .12s ease, border-color .12s ease;
+  }
+  nav.tabs button svg{width:15px; height:15px; opacity:0.85; flex-shrink:0;}
+  nav.tabs button.active{color:var(--ink); background:var(--amber); border-color:var(--amber); font-weight:700;}
+  nav.tabs button.active svg{opacity:1;}
+  nav.tabs button:not(.active):hover{color:var(--chalk); background:var(--surface-2); border-color:var(--line);}
+
+  main{flex:1; padding:28px 24px 60px 24px; max-width:980px; margin:0 auto; width:100%; animation:contentFade .45s ease both;}
+  @keyframes contentFade{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+  h2.section-title{font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:0.02em; margin:0 0 4px 0; position:relative; display:inline-block; padding-bottom:12px;}
+  h2.section-title::after{content:""; position:absolute; left:1px; bottom:0; width:44px; height:3px; border-radius:3px; background:linear-gradient(90deg, var(--amber), var(--teal));}
+  .section-sub{color:var(--muted); font-size:13.5px; margin-bottom:22px;}
+
+  .grid{display:grid; gap:16px;}
+  .grid.cols-3{grid-template-columns:repeat(3,1fr);}
+  .grid.cols-2{grid-template-columns:repeat(2,1fr);}
+  @media(max-width:720px){.grid.cols-3{grid-template-columns:1fr;} .grid.cols-2{grid-template-columns:1fr;}}
+
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.18);}
+  .card h3{margin:0 0 4px 0; font-size:16px;}
+  .stat-card{
+    background:linear-gradient(160deg, var(--surface), var(--surface-2)); border:1px solid var(--line); border-radius:var(--radius);
+    padding:20px 18px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,0.18); position:relative; overflow:hidden;
+  }
+  .stat-card::before{content:""; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg, var(--amber), var(--teal));}
+  .stat-card .icon{width:22px; height:22px; color:var(--amber); margin:0 auto 6px auto; display:block;}
+  .stat-card .num{font-family:'Bebas Neue',sans-serif; font-size:42px; color:var(--amber); line-height:1;}
+  .stat-card .lbl{color:var(--muted); font-size:12px; letter-spacing:0.06em; text-transform:uppercase; margin-top:6px;}
+
+  .class-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:18px; display:flex; flex-direction:column; gap:10px; box-shadow:0 2px 10px rgba(0,0,0,0.18); transition:transform .14s ease, border-color .14s ease;}
+  .class-card:hover{transform:translateY(-2px); border-color:var(--line);}
+  .class-top{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .class-name{font-size:17px; font-weight:700;}
+  .class-meta{color:var(--muted); font-size:13px; margin-top:2px;}
+  .capacity-pill{font-family:'IBM Plex Mono',monospace; font-size:12px; padding:4px 9px; border-radius:20px; background:var(--ink-2); border:1px solid var(--line); white-space:nowrap;}
+  .capacity-pill.full{color:var(--red); border-color:var(--red);}
+  .capacity-pill.ok{color:var(--teal); border-color:var(--teal);}
+  .member-chip{display:inline-flex; align-items:center; gap:6px; background:var(--ink-2); border:1px solid var(--line); border-radius:20px; padding:5px 10px 5px 10px; font-size:12.5px; margin:3px 4px 0 0;}
+  .member-chip button{background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:0;}
+  .member-chip button:hover{color:var(--red);}
+
+  table{width:100%; border-collapse:collapse; font-size:14px;}
+  table th{text-align:left; color:var(--muted); font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:0.05em; padding:8px 10px; border-bottom:1px solid var(--line);}
+  table td{padding:10px 10px; border-bottom:1px solid var(--line);}
+  table tr:last-child td{border-bottom:none;}
+
+  .scoreboard{background:var(--ink-2); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px;}
+  .scoreboard .label{color:var(--chalk-dim); font-size:13px; margin-bottom:2px;}
+  .scoreboard .big{display:flex; align-items:baseline; gap:8px;}
+  .scoreboard .val{font-family:'IBM Plex Mono',monospace; font-size:34px; color:var(--amber); font-weight:600;}
+  .scoreboard .unit{color:var(--muted); font-size:13px;}
+  .scoreboard .delta{font-family:'IBM Plex Mono',monospace; font-size:12.5px; padding:3px 8px; border-radius:6px; background:rgba(176,141,91,0.15); color:var(--teal);}
+  .scoreboard .delta.neg{background:rgba(226,87,76,0.15); color:var(--red);}
+  .scoreboard .date{color:var(--muted); font-size:11.5px; margin-top:4px;}
+
+  .member-row{display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:var(--surface); border:1px solid var(--line); border-radius:10px; margin-bottom:8px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.15); transition:transform .12s ease, border-color .12s ease;}
+  .member-row:hover{transform:translateX(2px);}
+  .member-row:hover{border-color:var(--amber);}
+  .member-row .name{font-weight:600;}
+  .member-row .sub{color:var(--muted); font-size:12px;}
+
+  .back-link{background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; margin-bottom:14px; display:inline-flex; align-items:center; gap:6px; padding:0;}
+  .back-link:hover{color:var(--amber);}
+
+  .info-post{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:14px;}
+  .info-post h3{margin:0 0 6px 0;}
+  .info-post .date{color:var(--muted); font-size:12px; margin-bottom:10px;}
+  .info-post p{white-space:pre-wrap; line-height:1.6; color:var(--chalk-dim); margin:0;}
+
+  .empty{text-align:center; padding:50px 20px; color:var(--muted);}
+  .empty .display{font-size:24px; color:var(--chalk-dim); margin-bottom:6px;}
+
+  .inline-form{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;}
+  .inline-form .field{margin-bottom:0; flex:1; min-width:120px;}
+
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--surface-2); border:1px solid var(--amber); color:var(--chalk);
+    padding:10px 18px; border-radius:9px; font-size:13.5px; z-index:100; box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  }
+  form{margin:0;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const LOGO_B64 = 'data:image/png;base64,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';
+const SUPABASE_URL = 'https://dsmzfxjlkxsxlklvnqga.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_2YhR1gF8Ci8O4OVSZcyxQw_70XFlM4W';
+if(!window.supabase){
+  document.getElementById('app').innerHTML = '<div class="login-wrap"><div class="login-card"><h1 class="brand-title">Even geduld</h1><div class="brand-tagline">De verbinding met de database kon niet geladen worden. Herlaad de pagina; als dit blijft gebeuren, controleer je internetverbinding of eventuele advertentieblokkers.</div></div></div>';
+  throw new Error('Supabase library failed to load');
+}
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let session = null;
+let profile = null;      // {id, name, email, role, joined}
+let settings = { studio_name:'PT Studio', tagline:'' };
+let activeTab = null;
+let activeMemberId = null;
+let loading = true;
+let authStage = 'idle';  // idle | register | confirm-pending | onboarding | forgot | forgot-sent | reset-password
+let authError = '';
+let pendingEmail = '';
+
+// cached data
+let classes = [];
+let signupCounts = {};   // {class_id: count}
+let mySignups = [];      // [class_id,...] (member only)
+let allSignups = {};     // {class_id: [member_id,...]} (trainer only)
+let members = [];        // trainer only, all profiles
+let myTests = [];        // member's own tests
+let viewedMemberTests = []; // trainer viewing a member's tests
+let infoPosts = [];
+let monthlyLeaderboard = [];
+let recipes = [];
+let payments = [];       // trainer viewing a specific member, or member's own
+let allPayments = [];    // trainer: all payments across all members, for the overview tab
+let waitlists = {};      // {classId: [{member_id, created_at}]} for trainer; own status for member
+let myWaitlistClassIds = []; // member: class_ids they're waitlisted for
+let goals = {};           // {label: {target_value, direction}} for the currently viewed member
+let pendingReferralCode = null;
+
+function escapeHtml(str){
+  return String(str ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function formatDate(d){
+  const dt = new Date(d + (String(d).length===10 ? 'T00:00:00' : ''));
+  return dt.toLocaleDateString('nl-BE', {day:'2-digit', month:'short', year:'numeric'});
+}
+function weekdayName(dateStr){
+  if(!dateStr) return '';
+  const d = new Date(dateStr+'T00:00:00');
+  const names = ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
+  return names[d.getDay()];
+}
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+function isoWeekKey(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  d.setDate(d.getDate() + 4 - (d.getDay()||7));
+  const yearStart = new Date(d.getFullYear(),0,1);
+  const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return d.getFullYear() + '-W' + week;
+}
+
+// Aantal opeenvolgende weken (tot vandaag) met minstens 1 les bijgewoond
+function computeStreak(memberId, allClasses, signupsByClass){
+  const today = todayStr();
+  const attendedWeeks = new Set();
+  Object.entries(signupsByClass).forEach(([classId, memberIds]) => {
+    if(!memberIds.includes(memberId)) return;
+    const cls = allClasses.find(c => c.id === classId);
+    if(!cls || cls.date >= today) return; // enkel voorbije lessen tellen als 'bijgewoond'
+    attendedWeeks.add(isoWeekKey(cls.date));
+  });
+  let streak = 0;
+  let cursor = new Date();
+  while(true){
+    const key = isoWeekKey(cursor.toISOString().slice(0,10));
+    if(attendedWeeks.has(key)){ streak++; cursor.setDate(cursor.getDate()-7); }
+    else break;
+  }
+  return streak;
+}
+
+function computeMonthlyLeaderboard(allClasses, signupsByClass, allMembers){
+  const month = todayStr().slice(0,7);
+  const counts = {};
+  Object.entries(signupsByClass).forEach(([classId, memberIds]) => {
+    const cls = allClasses.find(c => c.id === classId);
+    if(!cls || cls.date.slice(0,7) !== month || cls.date >= todayStr()) return;
+    memberIds.forEach(mid => { counts[mid] = (counts[mid]||0) + 1; });
+  });
+  return Object.entries(counts)
+    .map(([mid, cnt]) => ({ member: allMembers.find(m=>m.id===mid), cnt }))
+    .filter(r => r.member)
+    .sort((a,b) => b.cnt - a.cnt)
+    .slice(0,5);
+}
+
+function upcomingBirthdays(allMembers, daysAhead){
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  return allMembers
+    .filter(m => m.birth_date)
+    .map(m => {
+      const bd = new Date(m.birth_date+'T00:00:00');
+      let next = new Date(today.getFullYear(), bd.getMonth(), bd.getDate());
+      if(next < today) next = new Date(today.getFullYear()+1, bd.getMonth(), bd.getDate());
+      const diffDays = Math.round((next - today) / 86400000);
+      return { member: m, next, diffDays };
+    })
+    .filter(r => r.diffDays <= daysAhead)
+    .sort((a,b) => a.diffDays - b.diffDays);
+}
+
+function showToast(msg){
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=> t.remove(), 2600);
+}
+
+/* ---------------- INIT & AUTH ---------------- */
+
+function setupPWA(){
+  const manifest = {
+    name: 'Balanz', short_name: 'Balanz',
+    start_url: '.', scope: '.', display: 'standalone',
+    background_color: '#1C1712', theme_color: '#1C1712',
+    icons: [{ src: LOGO_B64, sizes: '260x260', type: 'image/png', purpose: 'any' }]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+  const manifestLink = document.createElement('link');
+  manifestLink.rel = 'manifest';
+  manifestLink.href = URL.createObjectURL(blob);
+  document.head.appendChild(manifestLink);
+
+  const touchIcon = document.createElement('link');
+  touchIcon.rel = 'apple-touch-icon';
+  touchIcon.href = LOGO_B64;
+  document.head.appendChild(touchIcon);
+
+  const themeColor = document.createElement('meta');
+  themeColor.name = 'theme-color';
+  themeColor.content = '#1C1712';
+  document.head.appendChild(themeColor);
+
+  const appleCapable = document.createElement('meta');
+  appleCapable.name = 'apple-mobile-web-app-capable';
+  appleCapable.content = 'yes';
+  document.head.appendChild(appleCapable);
+
+  const appleTitle = document.createElement('meta');
+  appleTitle.name = 'apple-mobile-web-app-title';
+  appleTitle.content = 'Balanz';
+  document.head.appendChild(appleTitle);
+}
+
+async function init(){
+  setupPWA();
+  const refParam = new URLSearchParams(window.location.search).get('ref');
+  if(refParam) pendingReferralCode = refParam;
+  // Vangnet: detecteer een wachtwoord-herstellink rechtstreeks in de URL,
+  // want het 'PASSWORD_RECOVERY' event kan gemist worden als het te vroeg vuurt.
+  const urlHasRecovery = (window.location.hash + window.location.search).includes('type=recovery');
+  if(urlHasRecovery){
+    authStage = 'reset-password';
+  }
+
+  sb.auth.onAuthStateChange((event, newSession) => {
+    session = newSession;
+    if(event === 'PASSWORD_RECOVERY'){
+      authStage = 'reset-password';
+      loading = false;
+      render();
+      return;
+    }
+    if(authStage === 'reset-password') return; // niet overschrijven tijdens het herstelproces
+    handleAuthChange();
+  });
+
+  const { data } = await sb.auth.getSession();
+  session = data.session;
+  await fetchSettings();
+  await handleAuthChange();
+}
+
+async function handleAuthChange(){
+  loading = false;
+  if(authStage === 'reset-password') { render(); return; }
+  if(!session){
+    profile = null;
+    render();
+    return;
+  }
+  const { data: prof, error } = await sb.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
+  if(error){ console.error(error); }
+  if(!prof){
+    authStage = 'onboarding';
+    profile = null;
+    render();
+    return;
+  }
+  profile = prof;
+  authStage = 'idle';
+  if(!activeTab) activeTab = profile.role === 'trainer' ? 'overzicht' : 'lessen';
+  await loadDataForTab();
+  render();
+}
+
+window.handleLogin = async function(e){
+  e.preventDefault();
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  if(!email || !password) return;
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if(error){ authError = 'Inloggen mislukt: verkeerd e-mailadres of wachtwoord.'; render(); return; }
+  authError = '';
+  render();
+};
+
+window.showRegisterForm = function(){ authStage = 'register'; authError = ''; render(); };
+window.showLoginForm = function(){ authStage = 'idle'; authError = ''; render(); };
+window.showForgotForm = function(){ authStage = 'forgot'; authError = ''; render(); };
+
+window.handleRegister = async function(e){
+  e.preventDefault();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const password2 = document.getElementById('regPassword2').value;
+  if(!email || !password){ return; }
+  if(password.length < 6){ authError = 'Wachtwoord moet minstens 6 tekens bevatten.'; render(); return; }
+  if(password !== password2){ authError = 'De twee wachtwoorden komen niet overeen.'; render(); return; }
+  pendingEmail = email;
+  const { data, error } = await sb.auth.signUp({ email, password });
+  if(error){ authError = 'Registreren mislukt: ' + error.message; render(); return; }
+  authError = '';
+  if(data.session){
+    // e-mailbevestiging staat uit in dit project: meteen ingelogd
+    session = data.session;
+    await handleAuthChange();
+  } else {
+    // e-mailbevestiging vereist
+    authStage = 'confirm-pending';
+    render();
+  }
+};
+
+window.handleForgotSubmit = async function(e){
+  e.preventDefault();
+  const email = document.getElementById('forgotEmail').value.trim();
+  if(!email) return;
+  pendingEmail = email;
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+  if(error){ authError = 'Er ging iets mis: ' + error.message; render(); return; }
+  authStage = 'forgot-sent';
+  authError = '';
+  render();
+};
+
+window.handleResetPasswordSubmit = async function(e){
+  e.preventDefault();
+  const password = document.getElementById('resetPassword').value;
+  const password2 = document.getElementById('resetPassword2').value;
+  if(password.length < 6){ authError = 'Wachtwoord moet minstens 6 tekens bevatten.'; render(); return; }
+  if(password !== password2){ authError = 'De twee wachtwoorden komen niet overeen.'; render(); return; }
+  const { error } = await sb.auth.updateUser({ password });
+  if(error){ showToast('Bijwerken mislukt: ' + error.message); return; }
+  authStage = 'idle';
+  authError = '';
+  showToast('Wachtwoord succesvol gewijzigd.');
+  await handleAuthChange();
+};
+
+function genReferralCode(){
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let c = '';
+  for(let i=0;i<6;i++) c += chars[Math.floor(Math.random()*chars.length)];
+  return c;
+}
+
+window.handleOnboardingSubmit = async function(e){
+  e.preventDefault();
+  const name = document.getElementById('onbName').value.trim();
+  if(!name) return;
+  const { data: trainerAlreadyExists } = await sb.rpc('trainer_exists');
+  const role = trainerAlreadyExists ? 'member' : 'trainer';
+  let referred_by = null;
+  if(pendingReferralCode){
+    const { data: refId } = await sb.rpc('resolve_referral', { code: pendingReferralCode });
+    if(refId) referred_by = refId;
+  }
+  const { data, error } = await sb.from('profiles').insert({
+    id: session.user.id, name, email: session.user.email, role,
+    referral_code: genReferralCode(), referred_by
+  }).select().single();
+  if(error){ showToast('Aanmaken profiel mislukt: ' + error.message); return; }
+  profile = data;
+  authStage = 'idle';
+  activeTab = profile.role === 'trainer' ? 'overzicht' : 'lessen';
+  await loadDataForTab();
+  render();
+};
+
+window.signOut = async function(){
+  await sb.auth.signOut();
+  session = null; profile = null; activeTab = null; activeMemberId = null;
+  render();
+};
+
+/* ---------------- DATA LOADING ---------------- */
+
+async function fetchSettings(){
+  const { data } = await sb.from('settings').select('*').eq('id',1).maybeSingle();
+  if(data) settings = data;
+}
+
+async function loadDataForTab(){
+  if(!profile) return;
+  const isTrainer = profile.role === 'trainer';
+  if(activeMemberId){
+    await loadMemberDetail(activeMemberId);
+    return;
+  }
+  if(activeTab === 'overzicht' && isTrainer){
+    await Promise.all([loadClasses(), loadMembers(), loadAllTestsSummary(), loadMonthlyLeaderboard()]);
+  } else if(activeTab === 'overzicht' && !isTrainer){
+    await Promise.all([loadClasses(), loadMySignups(), loadInfo(), loadMonthlyLeaderboard(), loadMyTests(), loadRecipes()]);
+  } else if(activeTab === 'lessen'){
+    await loadClasses();
+    if(isTrainer){ await loadAllSignups(); await loadAllWaitlists(); }
+    else { await loadMySignups(); await loadMyWaitlist(); }
+  } else if(activeTab === 'leden'){
+    await loadMembers();
+  } else if(activeTab === 'testen'){
+    await loadMyTests();
+    await loadGoals(profile.id);
+  } else if(activeTab === 'recepten'){
+    await loadRecipes();
+  } else if(activeTab === 'lidgeld'){
+    await Promise.all([loadMembers(), loadClasses(), loadAllSignups(), loadAllPayments()]);
+  } else if(activeTab === 'info'){
+    await loadInfo();
+  } else if(activeTab === 'profiel'){
+    await loadClasses();
+    if(isTrainer) await loadAllSignups(); else { await loadMySignups(); await loadPayments(profile.id); }
+  }
+}
+
+async function loadClasses(){
+  const { data } = await sb.from('classes').select('*').order('date').order('time');
+  classes = data || [];
+  const { data: counts } = await sb.rpc('class_signup_counts');
+  signupCounts = {};
+  (counts||[]).forEach(c => signupCounts[c.class_id] = c.cnt);
+}
+async function loadMySignups(){
+  const { data } = await sb.from('class_signups').select('class_id').eq('member_id', profile.id);
+  mySignups = (data||[]).map(r => r.class_id);
+}
+async function loadAllSignups(){
+  const { data } = await sb.from('class_signups').select('class_id, member_id');
+  allSignups = {};
+  (data||[]).forEach(r => { (allSignups[r.class_id] = allSignups[r.class_id]||[]).push(r.member_id); });
+}
+async function loadMembers(){
+  const { data } = await sb.from('profiles').select('*').order('name');
+  members = data || [];
+}
+async function loadMyTests(){
+  const { data } = await sb.from('tests').select('*').eq('member_id', profile.id).order('date');
+  myTests = data || [];
+}
+async function loadAllTestsSummary(){
+  const { data } = await sb.from('tests').select('*').order('date', {ascending:false}).limit(5);
+  viewedMemberTests = data || []; // reused for overview recent list
+}
+async function loadInfo(){
+  const { data } = await sb.from('info_posts').select('*').order('date', {ascending:false});
+  infoPosts = data || [];
+}
+async function loadMonthlyLeaderboard(){
+  const month = todayStr().slice(0,7);
+  const { data, error } = await sb.rpc('monthly_leaderboard', { month_prefix: month });
+  if(error){ console.error(error); monthlyLeaderboard = []; return; }
+  monthlyLeaderboard = data || [];
+}
+async function loadRecipes(){
+  const { data } = await sb.from('recipes').select('*').order('created_at', {ascending:false});
+  recipes = data || [];
+}
+async function loadAllWaitlists(){
+  const { data } = await sb.from('waitlist').select('*').order('created_at');
+  waitlists = {};
+  (data||[]).forEach(r => { (waitlists[r.class_id] = waitlists[r.class_id]||[]).push(r); });
+}
+async function loadMyWaitlist(){
+  const { data } = await sb.from('waitlist').select('class_id').eq('member_id', profile.id);
+  myWaitlistClassIds = (data||[]).map(r => r.class_id);
+}
+async function loadGoals(memberId){
+  const { data } = await sb.from('goals').select('*').eq('member_id', memberId);
+  goals = {};
+  (data||[]).forEach(g => { goals[g.label] = g; });
+}
+async function loadPayments(memberId){
+  const { data } = await sb.from('payments').select('*').eq('member_id', memberId).order('date', {ascending:false});
+  payments = data || [];
+}
+async function loadAllPayments(){
+  const { data } = await sb.from('payments').select('*').order('date', {ascending:false});
+  allPayments = data || [];
+}
+async function loadMemberDetail(memberId){
+  if(members.length === 0) await loadMembers();
+  const { data } = await sb.from('tests').select('*').eq('member_id', memberId).order('date');
+  viewedMemberTests = data || [];
+  await loadClasses();
+  await loadAllSignups();
+  await loadGoals(memberId);
+  await loadPayments(memberId);
+}
+
+/* ---------------- CLASS ACTIONS ---------------- */
+
+window.setTab = async function(tab){
+  activeTab = tab; activeMemberId = null;
+  loading = true; render();
+  await loadDataForTab();
+  loading = false; render();
+};
+
+window.openMember = async function(id){
+  activeMemberId = id;
+  loading = true; render();
+  await loadMemberDetail(id);
+  loading = false; render();
+};
+
+window.handleAddClass = async function(e){
+  e.preventDefault();
+  const name = document.getElementById('clsName').value.trim();
+  const date = document.getElementById('clsDate').value;
+  const time = document.getElementById('clsTime').value;
+  const location = document.getElementById('clsLocation').value.trim();
+  const capacity = parseInt(document.getElementById('clsCapacity').value) || 10;
+  const recurring = document.getElementById('clsRecurring').checked;
+  const weeks = recurring ? (parseInt(document.getElementById('clsWeeks').value) || 1) : 1;
+  if(!name || !date) return;
+
+  const rows = [];
+  const baseDate = new Date(date+'T00:00:00');
+  for(let i=0;i<weeks;i++){
+    const d = new Date(baseDate);
+    d.setDate(d.getDate() + i*7);
+    rows.push({ name, date: d.toISOString().slice(0,10), time, location, capacity });
+  }
+  const { error } = await sb.from('classes').insert(rows);
+  if(error){ showToast('Toevoegen mislukt: '+error.message); return; }
+  await loadClasses(); await loadAllSignups();
+  render();
+  if(weeks > 1) showToast(`${weeks} lessen aangemaakt (elke week).`);
+};
+window.deleteClass = async function(id){
+  await sb.from('classes').delete().eq('id', id);
+  await loadClasses(); await loadAllSignups();
+  render();
+};
+window.toggleEnroll = async function(classId){
+  const enrolled = mySignups.includes(classId);
+  if(enrolled){
+    await sb.from('class_signups').delete().eq('class_id', classId).eq('member_id', profile.id);
+    await sb.rpc('promote_from_waitlist', { p_class_id: classId });
+  } else {
+    const cap = classes.find(c=>c.id===classId)?.capacity || 0;
+    if((signupCounts[classId]||0) >= cap){ showToast('Deze les zit vol.'); return; }
+    const { error } = await sb.from('class_signups').insert({ class_id: classId, member_id: profile.id });
+    if(error){ showToast('Inschrijven mislukt: '+error.message); return; }
+  }
+  await loadClasses(); await loadMySignups();
+  render();
+};
+window.removeMemberFromClass = async function(classId, memberId){
+  await sb.from('class_signups').delete().eq('class_id', classId).eq('member_id', memberId);
+  await sb.rpc('promote_from_waitlist', { p_class_id: classId });
+  await loadClasses(); await loadAllSignups(); await loadAllWaitlists();
+  render();
+};
+window.joinWaitlist = async function(classId){
+  const { error } = await sb.from('waitlist').insert({ class_id: classId, member_id: profile.id });
+  if(error){ showToast('Inschrijven op wachtlijst mislukt: '+error.message); return; }
+  await loadMyWaitlist();
+  render();
+  showToast('Je staat op de wachtlijst — je krijgt automatisch een plaats zodra er eentje vrijkomt.');
+};
+window.leaveWaitlist = async function(classId){
+  await sb.from('waitlist').delete().eq('class_id', classId).eq('member_id', profile.id);
+  await loadMyWaitlist();
+  render();
+};
+
+/* ---------------- MEMBER / TEST ACTIONS ---------------- */
+
+window.deleteMember = async function(memberId){
+  await sb.from('profiles').delete().eq('id', memberId);
+  activeMemberId = null;
+  await loadMembers();
+  render();
+};
+
+function bodyMapSVG(){
+  const points = [
+    { x:65, y:44, label:'Nek-/schouderomtrek', unit:'cm' },
+    { x:65, y:68, label:'Borstomtrek', unit:'cm' },
+    { x:100, y:75, label:'Bicepsomtrek', unit:'cm' },
+    { x:65, y:104, label:'Taille', unit:'cm' },
+    { x:65, y:130, label:'Heupomtrek', unit:'cm' },
+    { x:50, y:170, label:'Bovenbeenomtrek', unit:'cm' },
+    { x:80, y:222, label:'Kuitomtrek', unit:'cm' },
+  ];
+  const dots = points.map(p => `
+    <circle cx="${p.x}" cy="${p.y}" r="7" fill="var(--amber)" fill-opacity="0.85" stroke="var(--ink)" stroke-width="1.5"
+      style="cursor:pointer;" onclick="setTestLabel('${p.label}','${p.unit}')">
+      <title>${p.label}</title>
+    </circle>`).join('');
+  return `
+  <svg viewBox="0 0 130 250" style="width:110px; height:auto; flex-shrink:0;">
+    <circle cx="65" cy="22" r="16" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/>
+    <rect x="43" y="42" width="44" height="68" rx="12" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/>
+    <rect x="20" y="48" width="16" height="58" rx="8" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/>
+    <rect x="94" y="48" width="16" height="58" rx="8" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/>
+    <rect x="38" y="112" width="54" height="26" rx="12" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/>
+    <rect x="40" y="138" width="18" height="76" rx="9" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/>
+    <rect x="72" y="138" width="18" height="76" rx="9" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/>
+    ${dots}
+  </svg>`;
+}
+
+window.setTestLabel = function(label, unit){
+  const labelField = document.getElementById('testLabel');
+  const unitField = document.getElementById('testUnit');
+  if(!labelField) return;
+  labelField.value = label;
+  if(unitField) unitField.value = unit;
+  document.getElementById('testValue')?.focus();
+};
+
+window.autofillTestUnit = function(){
+  const label = document.getElementById('testLabel').value.trim().toLowerCase();
+  const unitField = document.getElementById('testUnit');
+  if(unitField.value.trim() !== '') return;
+  const map = { 'gewicht':'kg','vetpercentage':'%','spiermassa':'kg','bankdrukken 1rm':'kg','squat 1rm':'kg','deadlift 1rm':'kg','hardlopen 5km':'min' };
+  if(map[label]) unitField.value = map[label];
+};
+
+window.handleAddTest = async function(e, memberId){
+  e.preventDefault();
+  const label = document.getElementById('testLabel').value.trim();
+  const value = document.getElementById('testValue').value.trim();
+  const unit = document.getElementById('testUnit').value.trim();
+  const note = document.getElementById('testNote').value.trim();
+  const date = document.getElementById('testDate').value || todayStr();
+  if(!label || !value) return;
+
+  const previousForLabel = viewedMemberTests.filter(t => t.label === label);
+  const previousValues = previousForLabel.map(t=>parseFloat(t.value)).filter(v=>!isNaN(v));
+  const direction = getDirection(label, unit);
+  const newVal = parseFloat(value);
+  const isPR = previousValues.length > 0 && !isNaN(newVal) &&
+    (direction === 'hoger' ? newVal > Math.max(...previousValues) : newVal < Math.min(...previousValues));
+
+  const { error } = await sb.from('tests').insert({ member_id: memberId, label, value, unit, note, date });
+  if(error){ showToast('Toevoegen mislukt: '+error.message); return; }
+  await loadMemberDetail(memberId);
+  render();
+  if(isPR) showToast(`🏆 Persoonlijk record voor ${label}!`);
+};
+window.deleteTest = async function(memberId, testId){
+  await sb.from('tests').delete().eq('id', testId);
+  await loadMemberDetail(memberId);
+  render();
+};
+
+/* ---------------- INFO ---------------- */
+
+window.handleAddInfo = async function(e){
+  e.preventDefault();
+  const title = document.getElementById('infoTitle').value.trim();
+  const body = document.getElementById('infoBody').value.trim();
+  if(!title || !body) return;
+  const { error } = await sb.from('info_posts').insert({ title, body });
+  if(error){ showToast('Plaatsen mislukt: '+error.message); return; }
+  await loadInfo();
+  render();
+};
+window.deleteInfo = async function(id){
+  await sb.from('info_posts').delete().eq('id', id);
+  await loadInfo();
+  render();
+};
+
+/* ---------------- SETTINGS ---------------- */
+
+window.handleSettingsSave = async function(e){
+  e.preventDefault();
+  const studio_name = document.getElementById('setStudioName').value.trim() || 'PT Studio';
+  const tagline = document.getElementById('setTagline').value.trim();
+  const { error } = await sb.from('settings').update({ studio_name, tagline }).eq('id',1);
+  if(error){ showToast('Opslaan mislukt: '+error.message); return; }
+  settings = { id:1, studio_name, tagline };
+  render();
+  showToast('Instellingen opgeslagen.');
+};
+
+/* ---------------- RENDER ---------------- */
+
+function render(){
+  const app = document.getElementById('app');
+  if(loading){
+    app.innerHTML = `<div class="login-wrap"><div class="hint">Laden…</div></div>`;
+    return;
+  }
+  if(authStage === 'reset-password'){
+    app.innerHTML = renderAuth();
+    return;
+  }
+  if(!session){
+    app.innerHTML = renderAuth();
+    return;
+  }
+  if(authStage === 'onboarding'){
+    app.innerHTML = renderOnboarding();
+    return;
+  }
+  if(!profile){
+    app.innerHTML = `<div class="login-wrap"><div class="hint">Laden…</div></div>`;
+    return;
+  }
+  app.innerHTML = renderShell();
+}
+
+function renderAuth(){
+  if(authStage === 'reset-password'){
+    return `
+    <div class="login-wrap">
+      <div class="login-card">
+      <img class="login-logo" src="${LOGO_B64}" alt="Balanz logo">
+                <div class="brand-eyebrow">${escapeHtml(settings.studio_name)}</div>
+        <h1 class="brand-title">Nieuw wachtwoord</h1>
+        <div class="brand-tagline">Kies een nieuw wachtwoord voor je account.</div>
+        <form onsubmit="handleResetPasswordSubmit(event)">
+          <div class="field"><label>Nieuw wachtwoord</label><input id="resetPassword" type="password" minlength="6" required autofocus></div>
+          <div class="field"><label>Herhaal wachtwoord</label><input id="resetPassword2" type="password" minlength="6" required></div>
+          ${authError ? `<div class="error-msg">${escapeHtml(authError)}</div>` : ''}
+          <button class="btn full" type="submit">Wachtwoord instellen</button>
+        </form>
+      </div>
+    </div>`;
+  }
+  if(authStage === 'confirm-pending'){
+    return `
+    <div class="login-wrap">
+      <div class="login-card">
+      <img class="login-logo" src="${LOGO_B64}" alt="Balanz logo">
+                <div class="brand-eyebrow">${escapeHtml(settings.studio_name)}</div>
+        <h1 class="brand-title">Check je mailbox</h1>
+        <div class="brand-tagline">We stuurden een bevestigingsmail naar <strong>${escapeHtml(pendingEmail)}</strong>. Klik op de link in de mail, en log daarna in met je e-mail en wachtwoord.</div>
+        <button class="btn ghost full" onclick="showLoginForm()">Terug naar inloggen</button>
+      </div>
+    </div>`;
+  }
+  if(authStage === 'forgot-sent'){
+    return `
+    <div class="login-wrap">
+      <div class="login-card">
+      <img class="login-logo" src="${LOGO_B64}" alt="Balanz logo">
+                <div class="brand-eyebrow">${escapeHtml(settings.studio_name)}</div>
+        <h1 class="brand-title">Check je mailbox</h1>
+        <div class="brand-tagline">We stuurden een link om je wachtwoord opnieuw in te stellen naar <strong>${escapeHtml(pendingEmail)}</strong>.</div>
+        <button class="btn ghost full" onclick="showLoginForm()">Terug naar inloggen</button>
+      </div>
+    </div>`;
+  }
+  if(authStage === 'forgot'){
+    return `
+    <div class="login-wrap">
+      <div class="login-card">
+      <img class="login-logo" src="${LOGO_B64}" alt="Balanz logo">
+                <div class="brand-eyebrow">${escapeHtml(settings.studio_name)}</div>
+        <h1 class="brand-title">Wachtwoord vergeten</h1>
+        <div class="brand-tagline">Vul je e-mailadres in, dan sturen we je een link om een nieuw wachtwoord te kiezen.</div>
+        <form onsubmit="handleForgotSubmit(event)">
+          <div class="field"><label>E-mailadres</label><input id="forgotEmail" type="email" required autofocus></div>
+          ${authError ? `<div class="error-msg">${escapeHtml(authError)}</div>` : ''}
+          <button class="btn full" type="submit">Verstuur link</button>
+        </form>
+        <div class="divider">of</div>
+        <button class="btn ghost full" onclick="showLoginForm()">Terug naar inloggen</button>
+      </div>
+    </div>`;
+  }
+  if(authStage === 'register'){
+    return `
+    <div class="login-wrap">
+      <div class="login-card">
+      <img class="login-logo" src="${LOGO_B64}" alt="Balanz logo">
+                <div class="brand-eyebrow">${escapeHtml(settings.studio_name || 'PT Studio')}</div>
+        <h1 class="brand-title">Account aanmaken</h1>
+        <div class="brand-tagline">Kies zelf een wachtwoord — dat gebruik je voortaan om in te loggen.</div>
+        <form onsubmit="handleRegister(event)">
+          <div class="field"><label>E-mailadres</label><input id="regEmail" type="email" required autofocus></div>
+          <div class="field"><label>Wachtwoord</label><input id="regPassword" type="password" minlength="6" required></div>
+          <div class="field"><label>Herhaal wachtwoord</label><input id="regPassword2" type="password" minlength="6" required></div>
+          ${authError ? `<div class="error-msg">${escapeHtml(authError)}</div>` : ''}
+          <button class="btn full" type="submit">Account aanmaken</button>
+        </form>
+        <div class="divider">of</div>
+        <button class="btn ghost full" onclick="showLoginForm()">Ik heb al een account</button>
+      </div>
+    </div>`;
+  }
+  return `
+  <div class="login-wrap">
+    <div class="login-card">
+      <img class="login-logo" src="${LOGO_B64}" alt="Balanz logo">
+      <div class="brand-eyebrow">${escapeHtml(settings.studio_name || 'PT Studio')}</div>
+      <h1 class="brand-title">Log in</h1>
+      <div class="brand-tagline">${escapeHtml(settings.tagline || 'Log in met je e-mailadres en wachtwoord.')}</div>
+      <form onsubmit="handleLogin(event)">
+        <div class="field">
+          <label>E-mailadres</label>
+          <input id="authEmail" type="email" required autofocus placeholder="jij@voorbeeld.be">
+        </div>
+        <div class="field">
+          <label>Wachtwoord</label>
+          <input id="authPassword" type="password" required>
+        </div>
+        ${authError ? `<div class="error-msg">${escapeHtml(authError)}</div>` : ''}
+        <button class="btn full" type="submit">Inloggen</button>
+      </form>
+      <div style="text-align:right; margin-top:10px;">
+        <button class="btn ghost small" onclick="showForgotForm()">Wachtwoord vergeten?</button>
+      </div>
+      <div class="divider">nieuw hier</div>
+      <button class="btn ghost full" onclick="showRegisterForm()">Account aanmaken</button>
+    </div>
+  </div>`;
+}
+
+function renderOnboarding(){
+  return `
+  <div class="login-wrap">
+    <div class="login-card">
+      <img class="login-logo" src="${LOGO_B64}" alt="Balanz logo">
+      <div class="brand-eyebrow">Bijna klaar</div>
+      <h1 class="brand-title">Hoe mogen we je noemen?</h1>
+      <div class="brand-tagline">Vul je naam in om je profiel af te ronden.</div>
+      <form onsubmit="handleOnboardingSubmit(event)">
+        <div class="field"><label>Naam</label><input id="onbName" type="text" required autofocus></div>
+        <button class="btn full" type="submit">Doorgaan</button>
+      </form>
+    </div>
+  </div>`;
+}
+
+function icon(name){
+  const paths = {
+    overzicht: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+    lessen: '<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/>',
+    leden: '<circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.5 2.9-6 6.5-6s6.5 2.5 6.5 6"/><circle cx="17.5" cy="8.5" r="2.6"/><path d="M15.5 14.2c2.7.4 4.5 2.6 4.5 5.8"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/>',
+    profiel: '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
+    instellingen: '<circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-1.7-1L14.9 3h-4l-.4 2.9a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.4L6.4 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 1.7 1l.4 2.9h4l.4-2.9a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6Z"/>',
+    testen: '<path d="M3 20V10M9 20V4M15 20v-7M21 20V13"/>',
+    recepten: '<path d="M4 21V9a4 4 0 0 1 8 0M4 13h8"/><path d="M15 3v7a2.5 2.5 0 0 0 5 0V3M17.5 10V21"/>',
+    lidgeld: '<rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M16 15h3"/>'
+  };
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[name]||''}</svg>`;
+}
+function logoMark(){
+  return `<img class="logo-mark" src="${LOGO_B64}" alt="Balanz logo">`;
+}
+
+function renderShell(){
+  const isTrainer = profile.role === 'trainer';
+  const trainerTabs = [['overzicht','Overzicht'],['lessen','Lessen'],['leden','Leden'],['lidgeld','Lidgeld'],['recepten','Recepten'],['info','Info'],['profiel','Mijn profiel'],['instellingen','Instellingen']];
+  const memberTabs = [['overzicht','Overzicht'],['lessen','Lessen'],['testen','Mijn testen'],['recepten','Recepten'],['info','Info'],['profiel','Mijn profiel']];
+  const tabs = isTrainer ? trainerTabs : memberTabs;
+
+  let content = '';
+  if(isTrainer && activeMemberId) content = renderMemberDetail(activeMemberId);
+  else if(activeTab === 'overzicht') content = isTrainer ? renderOverview() : renderMemberOverview();
+  else if(activeTab === 'lessen') content = isTrainer ? renderClassesTrainer() : renderClassesMember();
+  else if(activeTab === 'leden') content = renderMembersList();
+  else if(activeTab === 'testen') content = renderMyTests();
+  else if(activeTab === 'recepten') content = renderRecipes(isTrainer);
+  else if(activeTab === 'lidgeld') content = renderPaymentsOverview();
+  else if(activeTab === 'info') content = renderInfo(isTrainer);
+  else if(activeTab === 'profiel') content = renderProfile();
+  else if(activeTab === 'instellingen') content = renderSettings();
+
+  return `
+  <header class="top">
+    <div class="top-left">
+      ${logoMark()}
+      <span class="role-badge ${isTrainer?'trainer':''}">${isTrainer ? 'Trainer' : 'Lid'}</span>
+    </div>
+    <div class="top-right">
+      <span class="who">${escapeHtml(profile.name)}</span>
+      <button class="btn ghost small" onclick="signOut()">Uitloggen</button>
+    </div>
+  </header>
+  <nav class="tabs">
+    ${tabs.map(([key,label]) => `<button class="${activeTab===key && !activeMemberId ? 'active':''}" onclick="setTab('${key}')">${icon(key)}${label}</button>`).join('')}
+  </nav>
+  <main>${content}</main>
+  `;
+}
+
+function renderOverview(){
+  const upcomingBdays = upcomingBirthdays(members, 14);
+  const siteUrl = window.location.origin + window.location.pathname;
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(siteUrl)}`;
+
+  return `
+    <h2 class="section-title">Overzicht</h2>
+    <div class="section-sub">Snel zicht op je studio.</div>
+    <div class="grid cols-3" style="margin-bottom:26px;">
+      <div class="stat-card"><div class="icon">${icon('leden')}</div><div class="num">${members.length}</div><div class="lbl">Leden</div></div>
+      <div class="stat-card"><div class="icon">${icon('lessen')}</div><div class="num">${classes.length}</div><div class="lbl">Groepslessen</div></div>
+      <div class="stat-card"><div class="icon">${icon('testen')}</div><div class="num">${viewedMemberTests.length}</div><div class="lbl">Recente tests</div></div>
+    </div>
+
+    <div class="grid cols-2" style="margin-bottom:26px; align-items:start;">
+      <div class="card">
+        <h3 style="margin-bottom:12px;">Verjaardagen binnenkort</h3>
+        ${upcomingBdays.length === 0 ? `<div class="hint" style="margin-top:0;">Geen verjaardagen in de komende 14 dagen.</div>` : `
+        ${upcomingBdays.map(r => `
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line);">
+            <span>${escapeHtml(r.member.name)}</span>
+            <span class="mono" style="color:var(--muted); font-size:12.5px;">${r.diffDays === 0 ? 'Vandaag!' : r.diffDays === 1 ? 'Morgen' : `over ${r.diffDays} dagen`}</span>
+          </div>`).join('')}`}
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:12px;">Meeste lessen deze maand</h3>
+        ${monthlyLeaderboard.length === 0 ? `<div class="hint" style="margin-top:0;">Nog geen bijgewoonde lessen deze maand.</div>` : `
+        ${monthlyLeaderboard.map((r,i) => `
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line);">
+            <span>${i+1}. ${escapeHtml(r.member_name)}</span>
+            <span class="mono" style="color:var(--amber);">${r.cnt} ${r.cnt===1?'les':'lessen'}</span>
+          </div>`).join('')}`}
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:26px; display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
+      <img src="${qrSrc}" alt="QR-code naar je site" style="border-radius:8px; background:#fff; padding:8px; width:100px; height:100px;">
+      <div>
+        <h3 style="margin-bottom:4px;">Deel je studio</h3>
+        <div class="hint" style="margin-top:0;">Laat leden deze QR-code scannen om meteen naar de site te gaan — handig om op te hangen in je studio.</div>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:10px;">Recent toegevoegde testresultaten</h3>
+    ${viewedMemberTests.length === 0 ? `<div class="empty">Nog geen testresultaten ingevoerd.</div>` : `
+    <div class="card">
+      <table>
+        <tr><th>Datum</th><th>Lid</th><th>Test</th><th>Resultaat</th></tr>
+        ${viewedMemberTests.map(t => {
+          const m = members.find(x=>x.id===t.member_id);
+          return `<tr><td>${formatDate(t.date)}</td><td>${escapeHtml(m?m.name:'?')}</td><td>${escapeHtml(t.label)}</td><td class="mono">${escapeHtml(t.value)} ${escapeHtml(t.unit||'')}</td></tr>`;
+        }).join('')}
+      </table>
+    </div>`}
+  `;
+}
+
+function countNewPRsThisMonth(tests){
+  const month = todayStr().slice(0,7);
+  const byLabel = {};
+  tests.forEach(t => { (byLabel[t.label] = byLabel[t.label]||[]).push(t); });
+  let count = 0;
+  Object.entries(byLabel).forEach(([label, arr]) => {
+    const sorted = [...arr].sort((a,b)=> a.date.localeCompare(b.date));
+    const direction = getDirection(label, sorted[0]?.unit);
+    let best = null;
+    sorted.forEach(t => {
+      const v = parseFloat(t.value);
+      if(isNaN(v)) return;
+      const isRecord = best === null || (direction === 'hoger' ? v > best : v < best);
+      if(isRecord){
+        best = v;
+        if(t.date.slice(0,7) === month) count++;
+      }
+    });
+  });
+  return count;
+}
+
+function renderMemberOverview(){
+  const today = todayStr();
+  const month = today.slice(0,7);
+  const myNext = classes
+    .filter(c => c.date >= today && mySignups.includes(c.id))
+    .sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time))[0];
+  const latestInfo = infoPosts.slice(0,2);
+
+  const bySelf = {};
+  mySignups.forEach(cid => bySelf[cid] = [profile.id]);
+  const streak = computeStreak(profile.id, classes, bySelf);
+  const attendedThisMonth = classes.filter(c => c.date < today && c.date.slice(0,7) === month && mySignups.includes(c.id)).length;
+  const newPRsThisMonth = countNewPRsThisMonth(myTests);
+  const monthName = new Date(today+'T00:00:00').toLocaleDateString('nl-BE', {month:'long'});
+
+  const checklist = [
+    { label: 'Vul je geboortedatum in', done: !!profile.birth_date, tab: 'profiel' },
+    { label: 'Schrijf je in voor je eerste les', done: mySignups.length > 0, tab: 'lessen' },
+    { label: 'Woon je eerste les bij', done: classes.some(c => c.date < today && mySignups.includes(c.id)), tab: 'lessen' },
+    { label: 'Deel je eerste recept', done: recipes.some(r => r.author_id === profile.id), tab: 'recepten' },
+  ];
+  const checklistDone = checklist.every(c => c.done);
+
+  return `
+    <h2 class="section-title">Welkom, ${escapeHtml(profile.name)}</h2>
+    <div class="section-sub">${escapeHtml(settings.tagline || 'Fijn dat je er bent.')}</div>
+
+    <div class="card" style="margin-bottom:20px; background:linear-gradient(135deg, var(--surface), var(--surface-2));">
+      <h3 style="margin-bottom:14px;">Jouw ${escapeHtml(monthName)} in cijfers</h3>
+      <div class="grid cols-3">
+        <div class="stat-card"><div class="icon">${icon('lessen')}</div><div class="num">${attendedThisMonth}</div><div class="lbl">Lessen gevolgd</div></div>
+        <div class="stat-card"><div class="icon">${icon('testen')}</div><div class="num">${newPRsThisMonth}</div><div class="lbl">Nieuwe PR's</div></div>
+        <div class="stat-card"><div class="num" style="color:var(--amber);">🔥 ${streak}</div><div class="lbl">${streak===1?'Week':'Weken'} op rij</div></div>
+      </div>
+    </div>
+
+    ${!checklistDone ? `
+    <div class="card" style="margin-bottom:20px;">
+      <h3 style="margin-bottom:12px;">Aan de slag</h3>
+      ${checklist.map(c => `
+        <div style="display:flex; align-items:center; gap:10px; padding:7px 0; ${c.done ? 'opacity:0.55;' : 'cursor:pointer;'}" ${c.done?'':`onclick="setTab('${c.tab}')"`}>
+          <span style="width:18px; height:18px; border-radius:5px; border:1.5px solid ${c.done?'var(--teal)':'var(--line)'}; background:${c.done?'var(--teal)':'transparent'}; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:12px; color:var(--ink);">${c.done?'✓':''}</span>
+          <span style="text-decoration:${c.done?'line-through':'none'}; font-size:14px;">${escapeHtml(c.label)}</span>
+        </div>`).join('')}
+    </div>` : ''}
+
+    ${myNext ? `
+    <div class="card" style="margin-bottom:20px; border-color:var(--amber);">
+      <div class="hint" style="margin-top:0; color:var(--amber); text-transform:uppercase; letter-spacing:0.06em; font-size:11.5px;">Jouw volgende les</div>
+      <h3 style="margin:2px 0 0 0;">${escapeHtml(myNext.name)}</h3>
+      <div class="class-meta">${weekdayName(myNext.date)} ${formatDate(myNext.date)} · ${escapeHtml(myNext.time?.slice(0,5)||'')} ${myNext.location ? '· '+escapeHtml(myNext.location) : ''}</div>
+    </div>` : `
+    <div class="card" style="margin-bottom:20px;">
+      <div class="hint" style="margin-top:0;">Je bent nog voor geen enkele aankomende les ingeschreven — bekijk het tabblad <strong>Lessen</strong> om je in te schrijven.</div>
+    </div>`}
+
+    <div class="grid cols-2" style="margin-bottom:20px; align-items:start;">
+      <div class="card">
+        <h3 style="margin-bottom:12px;">Top 5 — meeste lessen deze maand</h3>
+        ${monthlyLeaderboard.length === 0 ? `<div class="hint" style="margin-top:0;">Nog geen bijgewoonde lessen deze maand.</div>` : `
+        ${monthlyLeaderboard.map((r,i) => `
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line);">
+            <span>${i+1}. ${escapeHtml(r.member_name)}${r.member_id === profile.id ? ' (jij)' : ''}</span>
+            <span class="mono" style="color:var(--amber);">${r.cnt} ${r.cnt===1?'les':'lessen'}</span>
+          </div>`).join('')}`}
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:12px;">Laatste nieuws</h3>
+        ${latestInfo.length === 0 ? `<div class="hint" style="margin-top:0;">Nog geen berichten geplaatst.</div>` : latestInfo.map(i => `
+          <div style="padding:8px 0; border-bottom:1px solid var(--line);">
+            <div style="font-weight:600;">${escapeHtml(i.title)}</div>
+            <div class="hint" style="margin-top:2px;">${formatDate(i.date)}</div>
+          </div>`).join('')}
+        <div style="text-align:right; margin-top:10px;"><button class="btn ghost small" onclick="setTab('info')">Alle berichten</button></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderClassesTrainer(){
+  const today = todayStr();
+  const upcoming = classes.filter(c => c.date >= today);
+  const past = classes.filter(c => c.date < today).sort((a,b)=> (b.date+b.time).localeCompare(a.date+a.time));
+
+  const renderCard = (c) => {
+    const enrolledIds = allSignups[c.id] || [];
+    const waiting = waitlists[c.id] || [];
+    return `
+        <div class="class-card">
+          <div class="class-top">
+            <div>
+              <div class="class-name">${escapeHtml(c.name)}</div>
+              <div class="class-meta">${weekdayName(c.date)} ${formatDate(c.date)} · ${escapeHtml(c.time?.slice(0,5)||'')} ${c.location ? '· '+escapeHtml(c.location) : ''}</div>
+            </div>
+            <span class="capacity-pill ${enrolledIds.length>=c.capacity?'full':'ok'}">${enrolledIds.length}/${c.capacity}</span>
+          </div>
+          <div>
+            ${enrolledIds.length === 0 ? `<span class="hint">Nog geen inschrijvingen.</span>` : enrolledIds.map(mid => {
+              const m = members.find(x=>x.id===mid);
+              return `<span class="member-chip">${escapeHtml(m?m.name:'?')}<button onclick="removeMemberFromClass('${c.id}','${mid}')">&times;</button></span>`;
+            }).join('')}
+          </div>
+          ${waiting.length > 0 ? `
+          <div>
+            <div class="hint" style="margin-top:0; margin-bottom:4px;">Wachtlijst (${waiting.length}):</div>
+            ${waiting.map(w => {
+              const m = members.find(x=>x.id===w.member_id);
+              return `<span class="member-chip" style="border-color:var(--teal); color:var(--teal);">${escapeHtml(m?m.name:'?')}</span>`;
+            }).join('')}
+          </div>` : ''}
+          <div style="text-align:right;"><button class="btn ghost small" onclick="deleteClass('${c.id}')">Verwijder les</button></div>
+        </div>`;
+  };
+
+  return `
+    <h2 class="section-title">Groepslessen</h2>
+    <div class="section-sub">Beheer je lessenrooster en zie wie is ingeschreven.</div>
+    <div class="card" style="margin-bottom:24px;">
+      <h3 style="margin-bottom:14px;">Nieuwe les toevoegen</h3>
+      <form onsubmit="handleAddClass(event)" class="inline-form">
+        <div class="field" style="min-width:160px;"><label>Naam</label><input id="clsName" type="text" placeholder="Bijv. Bootcamp" required></div>
+        <div class="field" style="min-width:150px;"><label>Datum</label><input id="clsDate" type="date" value="${todayStr()}" required></div>
+        <div class="field" style="min-width:100px;"><label>Uur</label><input id="clsTime" type="time" value="18:00"></div>
+        <div class="field" style="min-width:140px;"><label>Locatie</label><input id="clsLocation" type="text" placeholder="Bijv. Zaal 1"></div>
+        <div class="field" style="min-width:100px;"><label>Capaciteit</label><input id="clsCapacity" type="number" min="1" value="12"></div>
+        <button class="btn" type="submit">Toevoegen</button>
+      </form>
+      <div style="margin-top:14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <label style="display:flex; align-items:center; gap:7px; font-size:13.5px; color:var(--chalk-dim); cursor:pointer;">
+          <input id="clsRecurring" type="checkbox" style="width:16px; height:16px;"> Elke week herhalen
+        </label>
+        <span style="display:flex; align-items:center; gap:6px; font-size:13.5px; color:var(--chalk-dim);">
+          voor <input id="clsWeeks" type="number" min="2" max="52" value="8" style="width:60px; background:var(--ink-2); border:1px solid var(--line); color:var(--chalk); padding:6px 8px; border-radius:6px;"> weken
+        </span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:24px;">
+      <h3 style="margin-bottom:14px;">Deelnemers exporteren</h3>
+      <div class="inline-form">
+        <div class="field" style="min-width:160px;"><label>Maand</label><input id="exportMonth" type="month" value="${todayStr().slice(0,7)}"></div>
+        <button class="btn" onclick="exportSignupsCSV()">Exporteer naar spreadsheet (CSV)</button>
+      </div>
+      <div class="hint">Downloadt een CSV-bestand met alle deelnemers per les voor de gekozen maand — te openen in Excel of Google Sheets.</div>
+    </div>
+
+    <h3 style="margin-bottom:12px;">Aankomende lessen</h3>
+    ${upcoming.length === 0 ? `<div class="empty"><div class="display">Nog geen aankomende lessen</div>Voeg hierboven je eerste groepsles toe.</div>` : `
+    <div class="grid cols-2">${upcoming.map(renderCard).join('')}</div>`}
+
+    ${past.length > 0 ? `
+    <h3 style="margin:28px 0 12px 0;">Voorbije lessen</h3>
+    <div class="section-sub" style="margin-top:-6px;">Enkel zichtbaar voor jou — leden zien deze niet meer.</div>
+    <div class="grid cols-2">${past.map(renderCard).join('')}</div>` : ''}
+  `;
+}
+
+window.exportSignupsCSV = async function(){
+  const month = document.getElementById('exportMonth').value; // "2026-07"
+  if(!month) return;
+  const monthClasses = classes.filter(c => c.date.slice(0,7) === month);
+  if(monthClasses.length === 0){ showToast('Geen lessen gevonden in die maand.'); return; }
+  if(Object.keys(allSignups).length === 0) await loadAllSignups();
+  if(members.length === 0) await loadMembers();
+
+  let rows = [['Les','Datum','Uur','Locatie','Lid naam','Lid e-mail']];
+  monthClasses.sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time)).forEach(c => {
+    const ids = allSignups[c.id] || [];
+    if(ids.length === 0){
+      rows.push([c.name, formatDate(c.date), (c.time||'').slice(0,5), c.location||'', '', '']);
+    } else {
+      ids.forEach(mid => {
+        const m = members.find(x=>x.id===mid);
+        rows.push([c.name, formatDate(c.date), (c.time||'').slice(0,5), c.location||'', m?m.name:'?', m?m.email:'']);
+      });
+    }
+  });
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const blob = new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `deelnemers-${month}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+function renderClassesMember(){
+  const today = todayStr();
+  const upcoming = classes.filter(c => c.date >= today);
+  const myNext = upcoming
+    .filter(c => mySignups.includes(c.id))
+    .sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time))[0];
+
+  return `
+    <h2 class="section-title">Groepslessen</h2>
+    <div class="section-sub">Schrijf je in voor de lessen die passen in je schema.</div>
+    ${myNext ? `
+    <div class="card" style="margin-bottom:22px; border-color:var(--amber); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <div>
+        <div class="hint" style="margin-top:0; color:var(--amber); text-transform:uppercase; letter-spacing:0.06em; font-size:11.5px;">Jouw volgende les</div>
+        <h3 style="margin:2px 0 0 0;">${escapeHtml(myNext.name)}</h3>
+        <div class="class-meta">${weekdayName(myNext.date)} ${formatDate(myNext.date)} · ${escapeHtml(myNext.time?.slice(0,5)||'')} ${myNext.location ? '· '+escapeHtml(myNext.location) : ''}</div>
+      </div>
+    </div>` : ''}
+    ${upcoming.length === 0 ? `<div class="empty"><div class="display">Nog geen lessen</div>Je trainer heeft nog geen aankomende groepslessen aangemaakt.</div>` : `
+    <div class="grid cols-2">
+      ${upcoming.map(c => {
+        const count = signupCounts[c.id] || 0;
+        const full = count >= c.capacity;
+        const enrolled = mySignups.includes(c.id);
+        const waitlisted = myWaitlistClassIds.includes(c.id);
+        return `
+        <div class="class-card">
+          <div class="class-top">
+            <div>
+              <div class="class-name">${escapeHtml(c.name)}</div>
+              <div class="class-meta">${weekdayName(c.date)} ${formatDate(c.date)} · ${escapeHtml(c.time?.slice(0,5)||'')} ${c.location ? '· '+escapeHtml(c.location) : ''}</div>
+            </div>
+            <span class="capacity-pill ${full?'full':'ok'}">${count}/${c.capacity}</span>
+          </div>
+          ${!full ? `
+          <button class="btn ${enrolled?'ghost':''} full" onclick="toggleEnroll('${c.id}')">
+            ${enrolled ? 'Uitschrijven' : 'Inschrijven'}
+          </button>` : waitlisted ? `
+          <button class="btn ghost full" onclick="leaveWaitlist('${c.id}')">Van wachtlijst afmelden</button>
+          <div class="hint" style="text-align:center; margin-top:6px;">Je staat op de wachtlijst</div>` : `
+          <button class="btn ghost full" onclick="joinWaitlist('${c.id}')">Volzet — op wachtlijst zetten</button>`}
+        </div>`;
+      }).join('')}
+    </div>`}
+  `;
+}
+
+function renderMembersList(){
+  return `
+    <h2 class="section-title">Leden</h2>
+    <div class="section-sub">Klik op een lid om testresultaten te bekijken of toe te voegen. Leden registreren zichzelf via e-mail en wachtwoord.</div>
+    ${members.filter(m=>m.role==='member').length === 0 ? `<div class="empty"><div class="display">Nog geen leden</div>Zodra iemand zich aanmeldt, verschijnt die persoon hier.</div>` : `
+    ${members.filter(m=>m.role==='member').map(m => {
+      const referrer = m.referred_by ? members.find(x=>x.id===m.referred_by) : null;
+      return `
+      <div class="member-row" onclick="openMember('${m.id}')">
+        <div>
+          <div class="name">${escapeHtml(m.name)}</div>
+          <div class="sub">${escapeHtml(m.email)} · Lid sinds ${formatDate(m.joined)}${referrer ? ` · Aangebracht door ${escapeHtml(referrer.name)}` : ''}</div>
+        </div>
+      </div>
+    `;}).join('')}`}
+  `;
+}
+
+function renderMemberDetail(memberId){
+  const m = members.find(x=>x.id===memberId);
+  if(!m) return `<div class="empty">Lid niet gevonden.</div>`;
+  const tests = viewedMemberTests;
+  const grouped = {};
+  tests.forEach(t => { (grouped[t.label] = grouped[t.label]||[]).push(t); });
+  const streak = computeStreak(memberId, classes, allSignups);
+
+  const attendedClasses = classes
+    .filter(c => c.date < todayStr() && (allSignups[c.id]||[]).includes(memberId))
+    .sort((a,b)=> b.date.localeCompare(a.date));
+  const totalSessionsPaid = payments.reduce((sum,p) => sum + (p.sessions_included||0), 0);
+  const balance = totalSessionsPaid > 0 ? totalSessionsPaid - attendedClasses.length : null;
+
+  return `
+    <button class="back-link" onclick="setTab('leden')">&larr; Terug naar leden</button>
+    <h2 class="section-title">${escapeHtml(m.name)}</h2>
+    <div class="section-sub">${escapeHtml(m.email)} · Lid sinds ${formatDate(m.joined)}${streak > 0 ? ` · 🔥 ${streak} ${streak===1?'week':'weken'} op rij actief` : ''}</div>
+
+    <div class="card" style="margin-bottom:24px; display:flex; justify-content:flex-end;">
+      <button class="btn danger small" onclick="deleteMember('${m.id}')">Lid verwijderen</button>
+    </div>
+
+    <div class="card" style="margin-bottom:24px;">
+      <h3 style="margin-bottom:14px;">Aanwezigheid &amp; lidgeld</h3>
+      <div class="grid cols-3" style="margin-bottom:18px;">
+        <div class="stat-card"><div class="num">${attendedClasses.length}</div><div class="lbl">Beurten opgenomen</div></div>
+        <div class="stat-card"><div class="num">${totalSessionsPaid || '–'}</div><div class="lbl">Beurten betaald</div></div>
+        <div class="stat-card"><div class="num" style="color:${balance!==null && balance<0 ? 'var(--red)' : 'var(--amber)'};">${balance!==null ? balance : '–'}</div><div class="lbl">Saldo</div></div>
+      </div>
+
+      ${attendedClasses.length > 0 ? `
+      <details style="margin-bottom:16px;">
+        <summary style="cursor:pointer; color:var(--chalk-dim); font-size:13.5px; margin-bottom:8px;">Bekijk alle ${attendedClasses.length} bijgewoonde lessen</summary>
+        <table style="margin-top:10px;">
+          <tr><th>Datum</th><th>Les</th></tr>
+          ${attendedClasses.map(c => `<tr><td>${formatDate(c.date)}</td><td>${escapeHtml(c.name)}</td></tr>`).join('')}
+        </table>
+      </details>` : `<div class="hint" style="margin-top:0;">Nog geen voorbije lessen bijgewoond.</div>`}
+
+      <h4 style="margin:18px 0 10px 0; font-size:14px; color:var(--chalk-dim);">Betalingen registreren</h4>
+      <form onsubmit="handleAddPayment(event,'${m.id}')" class="inline-form" style="margin-bottom:16px;">
+        <div class="field" style="min-width:110px;"><label>Datum</label><input id="payDate" type="date" value="${todayStr()}"></div>
+        <div class="field" style="min-width:100px;"><label>Bedrag (€)</label><input id="payAmount" type="number" step="0.01" min="0" placeholder="50"></div>
+        <div class="field" style="min-width:110px;"><label>Aantal beurten</label><input id="paySessions" type="number" min="1" placeholder="10"></div>
+        <div class="field" style="min-width:140px;"><label>Notitie</label><input id="payNote" type="text" placeholder="Bijv. beurtenkaart"></div>
+        <button class="btn small" type="submit">Registreren</button>
+      </form>
+
+      ${payments.length === 0 ? `<div class="hint" style="margin-top:0;">Nog geen betalingen geregistreerd.</div>` : `
+      <table>
+        <tr><th>Datum</th><th>Bedrag</th><th>Beurten</th><th>Notitie</th><th></th></tr>
+        ${payments.map(p => `<tr>
+          <td>${formatDate(p.date)}</td>
+          <td class="mono">${p.amount!=null ? '€'+parseFloat(p.amount).toFixed(2) : '–'}</td>
+          <td class="mono">${p.sessions_included ?? '–'}</td>
+          <td>${escapeHtml(p.note||'')}</td>
+          <td style="text-align:right;"><button class="btn ghost small" onclick="deletePayment('${m.id}','${p.id}')">Verwijder</button></td>
+        </tr>`).join('')}
+      </table>`}
+    </div>
+
+    <div class="card" style="margin-bottom:24px;">
+      <h3 style="margin-bottom:14px;">Nieuw testresultaat toevoegen</h3>
+      <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start; margin-bottom:16px;">
+        ${bodyMapSVG()}
+        <div class="hint" style="flex:1; min-width:180px; margin-top:0;">Klik een meetpunt op de lichaamskaart om snel het testveld in te vullen, of typ zelf een eigen testnaam hieronder.</div>
+      </div>
+      <form onsubmit="handleAddTest(event, '${m.id}')" class="inline-form">
+        <div class="field" style="min-width:170px;">
+          <label>Test</label>
+          <input id="testLabel" type="text" list="testLabelSuggestions" placeholder="Bijv. Vetpercentage" required onchange="autofillTestUnit()">
+          <datalist id="testLabelSuggestions">
+            <option value="Gewicht"><option value="Vetpercentage"><option value="Spiermassa">
+            <option value="Bankdrukken 1RM"><option value="Squat 1RM"><option value="Deadlift 1RM"><option value="Hardlopen 5km">
+          </datalist>
+        </div>
+        <div class="field" style="min-width:90px;"><label>Waarde</label><input id="testValue" type="text" placeholder="80" required></div>
+        <div class="field" style="min-width:80px;"><label>Eenheid</label><input id="testUnit" type="text" placeholder="kg"></div>
+        <div class="field" style="min-width:130px;"><label>Datum</label><input id="testDate" type="date" value="${todayStr()}"></div>
+        <div class="field" style="min-width:150px;"><label>Notitie (optioneel)</label><input id="testNote" type="text" placeholder="Vorm goed"></div>
+        <button class="btn" type="submit">Toevoegen</button>
+      </form>
+    </div>
+
+    ${Object.keys(grouped).length === 0 ? `<div class="empty">Nog geen testresultaten voor dit lid.</div>` : `
+    <div class="grid cols-2">
+      ${Object.entries(grouped).map(([label, arr]) => renderScoreboard(label, arr, m.id, true)).join('')}
+    </div>`}
+  `;
+}
+
+function buildLineChart(sorted){
+  const pts = sorted.map(t => ({ date: t.date, v: parseFloat(t.value) })).filter(p => !isNaN(p.v));
+  if(pts.length < 2) return '';
+  const width = 320, height = 130, padX = 14, padY = 18;
+  let minV = Math.min(...pts.map(p=>p.v));
+  let maxV = Math.max(...pts.map(p=>p.v));
+  if(minV === maxV){ minV -= 1; maxV += 1; }
+  const xStep = (width - padX*2) / (pts.length - 1);
+  const coords = pts.map((p,i) => {
+    const x = padX + i*xStep;
+    const y = height - padY - ((p.v - minV)/(maxV - minV)) * (height - padY*2);
+    return { x, y, v: p.v, date: p.date };
+  });
+  const pathD = coords.map((c,i) => (i===0?'M':'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
+  const areaD = pathD + ` L${coords[coords.length-1].x.toFixed(1)},${height-padY} L${coords[0].x.toFixed(1)},${height-padY} Z`;
+  const circles = coords.map(c => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3.5" fill="var(--amber)" stroke="var(--ink-2)" stroke-width="1.5"><title>${escapeHtml(formatDate(c.date))}: ${escapeHtml(String(c.v))}</title></circle>`).join('');
+  return `
+    <svg viewBox="0 0 ${width} ${height+16}" style="width:100%; height:auto; display:block; margin-top:10px;">
+      <line x1="${padX}" y1="${height-padY}" x2="${width-padX}" y2="${height-padY}" stroke="var(--line)" stroke-width="1"/>
+      <path d="${areaD}" fill="rgba(214,213,62,0.12)" stroke="none"/>
+      <path d="${pathD}" fill="none" stroke="var(--amber)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${circles}
+      <text x="${padX}" y="${height+12}" fill="var(--muted)" font-size="10" font-family="IBM Plex Mono, monospace">${escapeHtml(formatDate(coords[0].date))}</text>
+      <text x="${width-padX}" y="${height+12}" fill="var(--muted)" font-size="10" font-family="IBM Plex Mono, monospace" text-anchor="end">${escapeHtml(formatDate(coords[coords.length-1].date))}</text>
+    </svg>`;
+}
+
+function getDirection(label, unit){
+  const g = goals[label];
+  if(g) return g.direction;
+  const u = (unit||'').toLowerCase();
+  if(u.includes('min') || u.includes('sec') || u.includes('u')) return 'lager';
+  return 'hoger';
+}
+
+function renderScoreboard(label, arr, memberId, trainerView){
+  const sorted = [...arr].sort((a,b)=> a.date.localeCompare(b.date));
+  const latest = sorted[sorted.length-1];
+  const prev = sorted[sorted.length-2];
+  let deltaHtml = '';
+  if(prev){
+    const diff = parseFloat(latest.value) - parseFloat(prev.value);
+    if(!isNaN(diff)) deltaHtml = `<span class="delta ${diff<0?'neg':''}">${diff>0?'+':''}${diff.toFixed(1)}</span>`;
+  }
+  const chart = buildLineChart(sorted);
+  const direction = getDirection(label, latest.unit);
+  const numericValues = sorted.map(t=>parseFloat(t.value)).filter(v=>!isNaN(v));
+  const bestValue = numericValues.length ? (direction === 'hoger' ? Math.max(...numericValues) : Math.min(...numericValues)) : null;
+  const latestIsPR = bestValue !== null && parseFloat(latest.value) === bestValue && sorted.length > 1;
+  const goal = goals[label];
+  let goalHtml = '';
+  if(goal){
+    const lv = parseFloat(latest.value);
+    const tv = parseFloat(goal.target_value);
+    let pct = 0;
+    if(!isNaN(lv) && !isNaN(tv)){
+      if(goal.direction === 'hoger'){
+        const startEstimate = numericValues.length ? Math.min(...numericValues) : lv;
+        pct = tv === startEstimate ? 100 : Math.max(0, Math.min(100, ((lv - startEstimate) / (tv - startEstimate)) * 100));
+      } else {
+        const startEstimate = numericValues.length ? Math.max(...numericValues) : lv;
+        pct = startEstimate === tv ? 100 : Math.max(0, Math.min(100, ((startEstimate - lv) / (startEstimate - tv)) * 100));
+      }
+    }
+    const reached = (goal.direction === 'hoger' && lv >= tv) || (goal.direction === 'lager' && lv <= tv);
+    goalHtml = `
+      <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--line);">
+        <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:5px;">
+          <span>Doel: ${escapeHtml(goal.target_value)} ${escapeHtml(latest.unit||'')}</span>
+          <span>${reached ? '🎯 Doel bereikt!' : Math.round(pct)+'%'}</span>
+        </div>
+        <div style="background:var(--ink-2); border-radius:6px; height:8px; overflow:hidden;">
+          <div style="background:${reached?'var(--teal)':'var(--amber)'}; height:100%; width:${Math.round(pct)}%; transition:width .3s ease;"></div>
+        </div>
+        ${trainerView || !trainerView ? `<button class="btn ghost small" style="margin-top:8px;" onclick="removeGoal('${memberId}','${escapeHtml(label)}')">Doel verwijderen</button>` : ''}
+      </div>`;
+  } else {
+    goalHtml = `
+      <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--line);">
+        <button class="btn ghost small" onclick="showGoalForm('${memberId}','${escapeHtml(label).replace(/'/g,"\\'")}')">+ Doel instellen</button>
+        <div id="goalForm-${memberId}-${label.replace(/[^a-zA-Z0-9]/g,'')}"></div>
+      </div>`;
+  }
+
+  return `
+    <div class="scoreboard">
+      <div class="label">${escapeHtml(label)} ${latestIsPR ? `<span style="color:var(--amber); font-size:11.5px; font-weight:700;">🏆 PR</span>` : ''}</div>
+      <div class="big">
+        <span class="val">${escapeHtml(latest.value)}</span>
+        <span class="unit">${escapeHtml(latest.unit||'')}</span>
+        ${deltaHtml}
+      </div>
+      <div class="date">Laatst gemeten op ${formatDate(latest.date)}${latest.note? ' · '+escapeHtml(latest.note):''}</div>
+      ${chart || (sorted.length===1 ? `<div class="hint">Nog maar 1 meting — de grafiek verschijnt vanaf de tweede meting.</div>` : '')}
+      ${sorted.length>1 ? `
+      <table style="margin-top:12px;">
+        <tr><th>Datum</th><th>Waarde</th>${trainerView?'<th></th>':''}</tr>
+        ${sorted.slice().reverse().map(t=>`<tr><td>${formatDate(t.date)}</td><td class="mono">${escapeHtml(t.value)} ${escapeHtml(t.unit||'')}</td>${trainerView?`<td style="text-align:right;"><button class="btn ghost small" onclick="deleteTest('${memberId}','${t.id}')">Verwijder</button></td>`:''}</tr>`).join('')}
+      </table>` : ''}
+      ${goalHtml}
+    </div>`;
+}
+
+window.showGoalForm = function(memberId, label){
+  const containerId = `goalForm-${memberId}-${label.replace(/[^a-zA-Z0-9]/g,'')}`;
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML = `
+    <form onsubmit="handleSetGoal(event,'${memberId}','${label.replace(/'/g,"\\'")}')" class="inline-form" style="margin-top:10px;">
+      <div class="field" style="min-width:100px;"><label>Streefwaarde</label><input id="goalTarget-${containerId}" type="number" step="any" required></div>
+      <div class="field" style="min-width:120px;"><label>Richting</label>
+        <select id="goalDirection-${containerId}">
+          <option value="hoger">Hoger is beter</option>
+          <option value="lager">Lager is beter</option>
+        </select>
+      </div>
+      <button class="btn small" type="submit">Instellen</button>
+    </form>`;
+};
+
+window.handleSetGoal = async function(e, memberId, label){
+  e.preventDefault();
+  const containerId = `goalForm-${memberId}-${label.replace(/[^a-zA-Z0-9]/g,'')}`;
+  const target_value = parseFloat(document.getElementById(`goalTarget-${containerId}`).value);
+  const direction = document.getElementById(`goalDirection-${containerId}`).value;
+  if(isNaN(target_value)) return;
+  const { error } = await sb.from('goals').upsert(
+    { member_id: memberId, label, target_value, direction },
+    { onConflict: 'member_id,label' }
+  );
+  if(error){ showToast('Instellen mislukt: ' + error.message); return; }
+  await loadGoals(memberId);
+  render();
+  showToast('Doel ingesteld.');
+};
+
+window.removeGoal = async function(memberId, label){
+  await sb.from('goals').delete().eq('member_id', memberId).eq('label', label);
+  await loadGoals(memberId);
+  render();
+};
+
+function renderMyTests(){
+  const grouped = {};
+  myTests.forEach(t => { (grouped[t.label] = grouped[t.label]||[]).push(t); });
+  return `
+    <h2 class="section-title">Mijn testen</h2>
+    <div class="section-sub">Enkel jij en je trainer kunnen deze resultaten zien.</div>
+    ${Object.keys(grouped).length === 0 ? `<div class="empty"><div class="display">Nog geen resultaten</div>Je trainer voegt hier je testresultaten toe zodra ze gemeten zijn.</div>` : `
+    <div class="grid cols-2">
+      ${Object.entries(grouped).map(([label, arr]) => renderScoreboard(label, arr, profile.id, false)).join('')}
+    </div>`}
+  `;
+}
+
+function renderRecipes(isTrainer){
+  return `
+    <h2 class="section-title">Recepten</h2>
+    <div class="section-sub">Deel en ontdek recepten met de rest van de groep.</div>
+
+    <div class="card" style="margin-bottom:24px;">
+      <h3 style="margin-bottom:14px;">Nieuw recept toevoegen</h3>
+      <form onsubmit="handleAddRecipe(event)">
+        <div class="field"><label>Titel</label><input id="recTitle" type="text" placeholder="Bijv. Proteïne-overnight oats" required></div>
+        <div class="field"><label>Ingrediënten</label><textarea id="recIngredients" rows="4" placeholder="Eén per lijn" required></textarea></div>
+        <div class="field"><label>Bereiding</label><textarea id="recInstructions" rows="4" required></textarea></div>
+        <button class="btn" type="submit">Recept delen</button>
+      </form>
+    </div>
+
+    ${recipes.length === 0 ? `<div class="empty"><div class="display">Nog geen recepten</div>Wees de eerste om er een te delen!</div>` : recipes.map(r => `
+      <div class="info-post">
+        <h3>${escapeHtml(r.title)}</h3>
+        <div class="date">Door ${escapeHtml(r.author_name)} · ${formatDate(r.created_at.slice(0,10))}</div>
+        <div style="margin-bottom:10px;">
+          <div style="font-weight:600; font-size:13px; color:var(--chalk-dim); margin-bottom:4px;">Ingrediënten</div>
+          <p>${escapeHtml(r.ingredients)}</p>
+        </div>
+        <div>
+          <div style="font-weight:600; font-size:13px; color:var(--chalk-dim); margin-bottom:4px;">Bereiding</div>
+          <p>${escapeHtml(r.instructions)}</p>
+        </div>
+        ${(r.author_id === profile.id || isTrainer) ? `<div style="text-align:right; margin-top:10px;"><button class="btn ghost small" onclick="deleteRecipe('${r.id}')">Verwijder</button></div>` : ''}
+      </div>
+    `).join('')}
+  `;
+}
+
+window.handleAddRecipe = async function(e){
+  e.preventDefault();
+  const title = document.getElementById('recTitle').value.trim();
+  const ingredients = document.getElementById('recIngredients').value.trim();
+  const instructions = document.getElementById('recInstructions').value.trim();
+  if(!title || !ingredients || !instructions) return;
+  const { error } = await sb.from('recipes').insert({
+    author_id: profile.id, author_name: profile.name, title, ingredients, instructions
+  });
+  if(error){ showToast('Delen mislukt: ' + error.message); return; }
+  await loadRecipes();
+  render();
+  showToast('Recept gedeeld!');
+};
+
+window.deleteRecipe = async function(id){
+  await sb.from('recipes').delete().eq('id', id);
+  await loadRecipes();
+  render();
+};
+
+window.handleAddPayment = async function(e, memberId){
+  e.preventDefault();
+  const date = document.getElementById('payDate').value || todayStr();
+  const amountRaw = document.getElementById('payAmount').value;
+  const sessionsRaw = document.getElementById('paySessions').value;
+  const note = document.getElementById('payNote').value.trim();
+  const amount = amountRaw ? parseFloat(amountRaw) : null;
+  const sessions_included = sessionsRaw ? parseInt(sessionsRaw) : null;
+  if(amount === null && sessions_included === null){ showToast('Vul een bedrag of aantal beurten in.'); return; }
+  const { error } = await sb.from('payments').insert({ member_id: memberId, date, amount, sessions_included, note });
+  if(error){ showToast('Registreren mislukt: ' + error.message); return; }
+  await loadPayments(memberId);
+  render();
+  showToast('Betaling geregistreerd.');
+};
+
+window.deletePayment = async function(memberId, paymentId){
+  await sb.from('payments').delete().eq('id', paymentId);
+  await loadPayments(memberId);
+  render();
+};
+
+function renderPaymentsOverview(){
+  const today = todayStr();
+  const rows = members.filter(m => m.role === 'member').map(m => {
+    const attended = classes.filter(c => c.date < today && (allSignups[c.id]||[]).includes(m.id)).length;
+    const memberPayments = allPayments.filter(p => p.member_id === m.id);
+    const totalPaid = memberPayments.reduce((s,p)=> s + (p.sessions_included||0), 0);
+    const balance = totalPaid > 0 ? totalPaid - attended : null;
+    const lastPayment = memberPayments.sort((a,b)=> b.date.localeCompare(a.date))[0];
+    return { member: m, attended, totalPaid, balance, lastPayment };
+  });
+
+  return `
+    <h2 class="section-title">Lidgeld</h2>
+    <div class="section-sub">Overzicht van opgenomen beurten versus betaalde beurten per lid. Klik op een lid voor details en om een betaling te registreren.</div>
+    ${rows.length === 0 ? `<div class="empty">Nog geen leden.</div>` : `
+    <div class="card">
+      <table>
+        <tr><th>Lid</th><th>Beurten opgenomen</th><th>Beurten betaald</th><th>Saldo</th><th>Laatste betaling</th></tr>
+        ${rows.map(r => `
+          <tr style="cursor:pointer;" onclick="openMember('${r.member.id}')">
+            <td>${escapeHtml(r.member.name)}</td>
+            <td class="mono">${r.attended}</td>
+            <td class="mono">${r.totalPaid || '–'}</td>
+            <td class="mono" style="color:${r.balance!==null && r.balance<0 ? 'var(--red)':'inherit'};">${r.balance!==null ? r.balance : '–'}</td>
+            <td>${r.lastPayment ? formatDate(r.lastPayment.date) : '–'}</td>
+          </tr>`).join('')}
+      </table>
+    </div>`}
+  `;
+}
+
+function renderInfo(isTrainer){
+  return `
+    <h2 class="section-title">Info</h2>
+    <div class="section-sub">Tips, aankondigingen en extra informatie.</div>
+    ${isTrainer ? `
+    <div class="card" style="margin-bottom:24px;">
+      <h3 style="margin-bottom:14px;">Nieuw bericht plaatsen</h3>
+      <form onsubmit="handleAddInfo(event)">
+        <div class="field"><label>Titel</label><input id="infoTitle" type="text" required></div>
+        <div class="field"><label>Tekst</label><textarea id="infoBody" rows="4" required></textarea></div>
+        <button class="btn" type="submit">Plaatsen</button>
+      </form>
+    </div>` : ''}
+    ${infoPosts.length === 0 ? `<div class="empty">Nog geen berichten geplaatst.</div>` : infoPosts.map(i => `
+      <div class="info-post">
+        <h3>${escapeHtml(i.title)}</h3>
+        <div class="date">${formatDate(i.date)}</div>
+        <p>${escapeHtml(i.body)}</p>
+        ${isTrainer ? `<div style="text-align:right; margin-top:10px;"><button class="btn ghost small" onclick="deleteInfo('${i.id}')">Verwijder</button></div>` : ''}
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderProfile(){
+  const isTrainer = profile.role === 'trainer';
+  const bySelf = {};
+  mySignups.forEach(cid => bySelf[cid] = [profile.id]);
+  const streak = !isTrainer ? computeStreak(profile.id, classes, bySelf) : 0;
+
+  const myAttended = !isTrainer ? classes.filter(c => c.date < todayStr() && mySignups.includes(c.id)).length : 0;
+  const myTotalPaid = !isTrainer ? payments.reduce((s,p)=> s + (p.sessions_included||0), 0) : 0;
+  const myBalance = myTotalPaid > 0 ? myTotalPaid - myAttended : null;
+
+  return `
+    <h2 class="section-title">Mijn profiel</h2>
+    <div class="section-sub">Beheer je naam, geboortedatum, e-mailadres en wachtwoord.${streak > 0 ? ` · 🔥 ${streak} ${streak===1?'week':'weken'} op rij actief` : ''}</div>
+
+    ${!isTrainer ? `
+    <div class="card" style="max-width:480px; margin-bottom:20px;">
+      <h3 style="margin-bottom:14px;">Mijn beurten &amp; lidgeld</h3>
+      <div class="grid cols-3" style="margin-bottom:14px;">
+        <div class="stat-card"><div class="num">${myAttended}</div><div class="lbl">Opgenomen</div></div>
+        <div class="stat-card"><div class="num">${myTotalPaid || '–'}</div><div class="lbl">Betaald</div></div>
+        <div class="stat-card"><div class="num" style="color:${myBalance!==null && myBalance<0 ? 'var(--red)' : 'var(--amber)'};">${myBalance!==null ? myBalance : '–'}</div><div class="lbl">Saldo</div></div>
+      </div>
+      ${payments.length === 0 ? `<div class="hint" style="margin-top:0;">Nog geen betalingen geregistreerd door je trainer.</div>` : `
+      <table>
+        <tr><th>Datum</th><th>Bedrag</th><th>Beurten</th></tr>
+        ${payments.map(p => `<tr><td>${formatDate(p.date)}</td><td class="mono">${p.amount!=null?'€'+parseFloat(p.amount).toFixed(2):'–'}</td><td class="mono">${p.sessions_included ?? '–'}</td></tr>`).join('')}
+      </table>`}
+    </div>` : ''}
+
+    <div class="card" style="max-width:480px; margin-bottom:20px;">
+      <h3 style="margin-bottom:14px;">Nodig een vriend uit</h3>
+      ${profile.referral_code ? `
+      <div class="hint" style="margin-top:0; margin-bottom:10px;">Deel deze link — wie zich hiermee aanmeldt, koppelen we automatisch aan jouw naam.</div>
+      <div class="inline-form">
+        <div class="field" style="flex:1; min-width:200px;"><input id="referralLinkField" type="text" readonly value="${window.location.origin}${window.location.pathname}?ref=${escapeHtml(profile.referral_code)}"></div>
+        <button class="btn ghost small" onclick="copyReferralLink()">Kopieer link</button>
+      </div>` : `
+      <button class="btn ghost small" onclick="ensureReferralCode()">Genereer mijn uitnodigingslink</button>`}
+    </div>
+
+    <div class="card" style="max-width:480px; margin-bottom:20px;">
+      <h3 style="margin-bottom:14px;">Naam &amp; geboortedatum</h3>
+      <form onsubmit="handleUpdateName(event)">
+        <div class="field"><label>Naam</label><input id="profName" type="text" value="${escapeHtml(profile.name)}" required></div>
+        <div class="field"><label>Geboortedatum (optioneel)</label><input id="profBirthdate" type="date" value="${profile.birth_date || ''}"></div>
+        <button class="btn" type="submit">Opslaan</button>
+      </form>
+    </div>
+
+    <div class="card" style="max-width:480px; margin-bottom:20px;">
+      <h3 style="margin-bottom:14px;">E-mailadres</h3>
+      <form onsubmit="handleUpdateEmail(event)">
+        <div class="field"><input id="profEmail" type="email" value="${escapeHtml(session.user.email)}" required></div>
+        <div class="hint" style="margin-top:-6px; margin-bottom:12px;">Bij wijziging ontvang je een bevestigingsmail op het nieuwe adres.</div>
+        <button class="btn ghost" type="submit">E-mailadres wijzigen</button>
+      </form>
+    </div>
+
+    <div class="card" style="max-width:480px;">
+      <h3 style="margin-bottom:14px;">Wachtwoord wijzigen</h3>
+      <form onsubmit="handleUpdatePasswordDirect(event)">
+        <div class="field"><label>Nieuw wachtwoord</label><input id="profPassword" type="password" minlength="6" required></div>
+        <div class="field"><label>Herhaal wachtwoord</label><input id="profPassword2" type="password" minlength="6" required></div>
+        <button class="btn ghost" type="submit">Wachtwoord wijzigen</button>
+      </form>
+    </div>
+  `;
+}
+
+window.copyReferralLink = function(){
+  const field = document.getElementById('referralLinkField');
+  field.select();
+  navigator.clipboard?.writeText(field.value).then(()=> showToast('Link gekopieerd!')).catch(()=> showToast('Kopiëren mislukt — selecteer en kopieer manueel.'));
+};
+
+window.ensureReferralCode = async function(){
+  const code = genReferralCode();
+  const { data, error } = await sb.from('profiles').update({ referral_code: code }).eq('id', profile.id).select().single();
+  if(error){ showToast('Aanmaken link mislukt: ' + error.message); return; }
+  profile = data;
+  render();
+};
+
+window.handleUpdateName = async function(e){
+  e.preventDefault();
+  const name = document.getElementById('profName').value.trim();
+  const birth_date = document.getElementById('profBirthdate').value || null;
+  if(!name) return;
+  const { data, error } = await sb.from('profiles').update({ name, birth_date }).eq('id', profile.id).select().single();
+  if(error){ showToast('Opslaan mislukt: ' + error.message); return; }
+  profile = data;
+  render();
+  showToast('Opgeslagen.');
+};
+
+window.handleUpdateEmail = async function(e){
+  e.preventDefault();
+  const email = document.getElementById('profEmail').value.trim();
+  if(!email || email === session.user.email) return;
+  const { error } = await sb.auth.updateUser({ email });
+  if(error){ showToast('Wijzigen mislukt: ' + error.message); return; }
+  showToast('Bevestigingsmail verstuurd naar het nieuwe adres.');
+};
+
+window.handleUpdatePasswordDirect = async function(e){
+  e.preventDefault();
+  const password = document.getElementById('profPassword').value;
+  const password2 = document.getElementById('profPassword2').value;
+  if(password.length < 6){ showToast('Wachtwoord moet minstens 6 tekens bevatten.'); return; }
+  if(password !== password2){ showToast('De twee wachtwoorden komen niet overeen.'); return; }
+  const { error } = await sb.auth.updateUser({ password });
+  if(error){ showToast('Wijzigen mislukt: ' + error.message); return; }
+  document.getElementById('profPassword').value = '';
+  document.getElementById('profPassword2').value = '';
+  showToast('Wachtwoord succesvol gewijzigd.');
+};
+
+function renderSettings(){
+  return `
+    <h2 class="section-title">Instellingen</h2>
+    <div class="section-sub">Pas de naam en tagline van je studio aan.</div>
+    <div class="card" style="max-width:480px;">
+      <form onsubmit="handleSettingsSave(event)">
+        <div class="field"><label>Studionaam</label><input id="setStudioName" type="text" value="${escapeHtml(settings.studio_name)}" required></div>
+        <div class="field"><label>Tagline (op inlogscherm)</label><input id="setTagline" type="text" value="${escapeHtml(settings.tagline||'')}" placeholder="Bijv. Sterker worden, samen."></div>
+        <button class="btn" type="submit">Opslaan</button>
+      </form>
+    </div>
+  `;
+}
+
+init();
+</script>
+</body>
+</html>
