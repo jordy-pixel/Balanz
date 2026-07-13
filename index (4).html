@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PT Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#181B24;
+    --ink-2:#20242F;
+    --surface:#272C3A;
+    --surface-2:#2F3546;
+    --line:#3A4055;
+    --chalk:#F2F0EA;
+    --chalk-dim:#B7BAC4;
+    --muted:#8B8FA0;
+    --amber:#F2A93B;
+    --amber-dim:#8A6321;
+    --teal:#3FA9A0;
+    --red:#E2574C;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--chalk);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .display{font-family:'Bebas Neue',sans-serif; letter-spacing:0.02em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  #app{min-height:100vh; display:flex; flex-direction:column;}
+
+  /* ---------- Login / setup screen ---------- */
+  .login-wrap{
+    flex:1; display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .login-card{
+    width:100%; max-width:420px; background:var(--surface); border:1px solid var(--line);
+    border-radius:var(--radius); padding:36px 32px; position:relative; overflow:hidden;
+  }
+  .login-card::before{
+    content:""; position:absolute; top:-60px; right:-60px; width:160px; height:160px;
+    background:radial-gradient(circle, rgba(242,169,59,0.25), transparent 70%);
+  }
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.18em; color:var(--amber);
+    text-transform:uppercase; margin-bottom:6px;
+  }
+  .brand-title{
+    font-family:'Bebas Neue',sans-serif; font-size:44px; line-height:0.95; margin:0 0 4px 0; color:var(--chalk);
+  }
+  .brand-tagline{color:var(--muted); font-size:14px; margin-bottom:28px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:12px; color:var(--chalk-dim); margin-bottom:6px; letter-spacing:0.03em;}
+  .field input, .field select, .field textarea{
+    width:100%; background:var(--ink-2); border:1px solid var(--line); color:var(--chalk);
+    padding:12px 14px; border-radius:9px; font-size:15px; font-family:'Inter',sans-serif;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--amber); outline-offset:1px; border-color:var(--amber);}
+  .code-input{font-family:'IBM Plex Mono',monospace; letter-spacing:0.28em; text-transform:uppercase; font-size:20px; text-align:center;}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    background:var(--amber); color:#20140A; border:none; padding:12px 20px; border-radius:9px;
+    font-weight:700; font-size:14px; cursor:pointer; letter-spacing:0.02em; transition:transform .12s ease, filter .12s ease;
+    font-family:'Inter',sans-serif;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn:active{transform:scale(0.98);}
+  .btn.full{width:100%;}
+  .btn.ghost{background:transparent; color:var(--chalk); border:1px solid var(--line);}
+  .btn.ghost:hover{border-color:var(--amber); color:var(--amber);}
+  .btn.danger{background:var(--red); color:#2A0908;}
+  .btn.small{padding:8px 12px; font-size:12px; border-radius:7px;}
+  .btn.teal{background:var(--teal); color:#062522;}
+  .divider{display:flex; align-items:center; gap:12px; margin:22px 0; color:var(--muted); font-size:12px;}
+  .divider::before, .divider::after{content:""; flex:1; height:1px; background:var(--line);}
+  .error-msg{color:var(--red); font-size:13px; margin-top:-6px; margin-bottom:14px;}
+  .hint{color:var(--muted); font-size:12.5px; margin-top:8px; line-height:1.5;}
+  .code-reveal{
+    background:var(--ink-2); border:1px dashed var(--amber); border-radius:10px; padding:18px;
+    text-align:center; margin:16px 0;
+  }
+  .code-reveal .code{font-family:'IBM Plex Mono',monospace; font-size:28px; letter-spacing:0.3em; color:var(--amber); font-weight:600;}
+
+  /* ---------- Shell ---------- */
+  header.top{
+    display:flex; align-items:center; justify-content:space-between; padding:16px 24px;
+    border-bottom:1px solid var(--line); background:var(--ink-2); position:sticky; top:0; z-index:10;
+  }
+  .top-left{display:flex; align-items:center; gap:14px;}
+  .top-left .display{font-size:26px; color:var(--chalk);}
+  .role-badge{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; padding:4px 9px; border-radius:6px;
+    background:rgba(242,169,59,0.15); color:var(--amber); letter-spacing:0.06em; text-transform:uppercase;
+  }
+  .role-badge.trainer{background:rgba(63,169,160,0.18); color:var(--teal);}
+  .top-right{display:flex; align-items:center; gap:12px;}
+  .who{color:var(--chalk-dim); font-size:13px;}
+
+  nav.tabs{
+    display:flex; gap:4px; padding:10px 24px 0 24px; background:var(--ink-2); overflow-x:auto;
+    border-bottom:1px solid var(--line);
+  }
+  nav.tabs button{
+    background:transparent; border:none; color:var(--muted); padding:10px 16px; font-size:14px;
+    font-weight:600; cursor:pointer; border-bottom:3px solid transparent; white-space:nowrap; font-family:'Inter',sans-serif;
+  }
+  nav.tabs button.active{color:var(--chalk); border-bottom-color:var(--amber);}
+  nav.tabs button:hover{color:var(--chalk);}
+
+  main{flex:1; padding:28px 24px 60px 24px; max-width:980px; margin:0 auto; width:100%;}
+  h2.section-title{font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:0.02em; margin:0 0 4px 0;}
+  .section-sub{color:var(--muted); font-size:13.5px; margin-bottom:22px;}
+
+  .grid{display:grid; gap:16px;}
+  .grid.cols-3{grid-template-columns:repeat(3,1fr);}
+  .grid.cols-2{grid-template-columns:repeat(2,1fr);}
+  @media(max-width:720px){.grid.cols-3{grid-template-columns:1fr;} .grid.cols-2{grid-template-columns:1fr;}}
+
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px;}
+  .card h3{margin:0 0 4px 0; font-size:16px;}
+  .stat-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:18px; text-align:center;}
+  .stat-card .num{font-family:'Bebas Neue',sans-serif; font-size:42px; color:var(--amber); line-height:1;}
+  .stat-card .lbl{color:var(--muted); font-size:12px; letter-spacing:0.06em; text-transform:uppercase; margin-top:6px;}
+
+  .class-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:18px; display:flex; flex-direction:column; gap:10px;}
+  .class-top{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .class-name{font-size:17px; font-weight:700;}
+  .class-meta{color:var(--muted); font-size:13px; margin-top:2px;}
+  .capacity-pill{font-family:'IBM Plex Mono',monospace; font-size:12px; padding:4px 9px; border-radius:20px; background:var(--ink-2); border:1px solid var(--line); white-space:nowrap;}
+  .capacity-pill.full{color:var(--red); border-color:var(--red);}
+  .capacity-pill.ok{color:var(--teal); border-color:var(--teal);}
+  .member-chip{display:inline-flex; align-items:center; gap:6px; background:var(--ink-2); border:1px solid var(--line); border-radius:20px; padding:5px 10px 5px 10px; font-size:12.5px; margin:3px 4px 0 0;}
+  .member-chip button{background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:0;}
+  .member-chip button:hover{color:var(--red);}
+
+  table{width:100%; border-collapse:collapse; font-size:14px;}
+  table th{text-align:left; color:var(--muted); font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:0.05em; padding:8px 10px; border-bottom:1px solid var(--line);}
+  table td{padding:10px 10px; border-bottom:1px solid var(--line);}
+  table tr:last-child td{border-bottom:none;}
+
+  .scoreboard{background:var(--ink-2); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px;}
+  .scoreboard .label{color:var(--chalk-dim); font-size:13px; margin-bottom:2px;}
+  .scoreboard .big{display:flex; align-items:baseline; gap:8px;}
+  .scoreboard .val{font-family:'IBM Plex Mono',monospace; font-size:34px; color:var(--amber); font-weight:600;}
+  .scoreboard .unit{color:var(--muted); font-size:13px;}
+  .scoreboard .delta{font-family:'IBM Plex Mono',monospace; font-size:12.5px; padding:3px 8px; border-radius:6px; background:rgba(63,169,160,0.15); color:var(--teal);}
+  .scoreboard .delta.neg{background:rgba(226,87,76,0.15); color:var(--red);}
+  .scoreboard .date{color:var(--muted); font-size:11.5px; margin-top:4px;}
+
+  .member-row{display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:var(--surface); border:1px solid var(--line); border-radius:10px; margin-bottom:8px; cursor:pointer;}
+  .member-row:hover{border-color:var(--amber);}
+  .member-row .name{font-weight:600;}
+  .member-row .sub{color:var(--muted); font-size:12px;}
+
+  .back-link{background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; margin-bottom:14px; display:inline-flex; align-items:center; gap:6px; padding:0;}
+  .back-link:hover{color:var(--amber);}
+
+  .info-post{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:14px;}
+  .info-post h3{margin:0 0 6px 0;}
+  .info-post .date{color:var(--muted); font-size:12px; margin-bottom:10px;}
+  .info-post p{white-space:pre-wrap; line-height:1.6; color:var(--chalk-dim); margin:0;}
+
+  .empty{text-align:center; padding:50px 20px; color:var(--muted);}
+  .empty .display{font-size:24px; color:var(--chalk-dim); margin-bottom:6px;}
+
+  .inline-form{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;}
+  .inline-form .field{margin-bottom:0; flex:1; min-width:120px;}
+
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--surface-2); border:1px solid var(--amber); color:var(--chalk);
+    padding:10px 18px; border-radius:9px; font-size:13.5px; z-index:100; box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  }
+  form{margin:0;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL = 'https://dsmzfxjlkxsxlklvnqga.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_2YhR1gF8Ci8O4OVSZcyxQw_70XFlM4W';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let session = null;
+let profile = null;      // {id, name, email, role, joined}
+let settings = { studio_name:'PT Studio', tagline:'' };
+let activeTab = null;
+let activeMemberId = null;
+let loading = true;
+let authStage = 'idle';  // idle | sent | onboarding
+let authError = '';
+let pendingEmail = '';
+
+// cached data
+let classes = [];
+let signupCounts = {};   // {class_id: count}
+let mySignups = [];      // [class_id,...] (member only)
+let allSignups = {};     // {class_id: [member_id,...]} (trainer only)
+let members = [];        // trainer only, all profiles
+let myTests = [];        // member's own tests
+let viewedMemberTests = []; // trainer viewing a member's tests
+let infoPosts = [];
+
+function escapeHtml(str){
+  return String(str ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function formatDate(d){
+  const dt = new Date(d + (String(d).length===10 ? 'T00:00:00' : ''));
+  return dt.toLocaleDateString('nl-BE', {day:'2-digit', month:'short', year:'numeric'});
+}
+function weekdayName(dateStr){
+  if(!dateStr) return '';
+  const d = new Date(dateStr+'T00:00:00');
+  const names = ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
+  return names[d.getDay()];
+}
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function showToast(msg){
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=> t.remove(), 2600);
+}
+
+/* ---------------- INIT & AUTH ---------------- */
+
+async function init(){
+  const { data } = await sb.auth.getSession();
+  session = data.session;
+  sb.auth.onAuthStateChange((_event, newSession) => {
+    session = newSession;
+    handleAuthChange();
+  });
+  await fetchSettings();
+  await handleAuthChange();
+}
+
+async function handleAuthChange(){
+  loading = false;
+  if(!session){
+    profile = null;
+    render();
+    return;
+  }
+  const { data: prof, error } = await sb.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
+  if(error){ console.error(error); }
+  if(!prof){
+    authStage = 'onboarding';
+    profile = null;
+    render();
+    return;
+  }
+  profile = prof;
+  authStage = 'idle';
+  if(!activeTab) activeTab = profile.role === 'trainer' ? 'overzicht' : 'lessen';
+  await loadDataForTab();
+  render();
+}
+
+window.handleSendLink = async function(e){
+  e.preventDefault();
+  const email = document.getElementById('authEmail').value.trim();
+  if(!email) return;
+  pendingEmail = email;
+  const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: window.location.origin + window.location.pathname } });
+  if(error){ authError = 'Er ging iets mis: ' + error.message; render(); return; }
+  authStage = 'sent';
+  authError = '';
+  render();
+};
+
+window.handleOnboardingSubmit = async function(e){
+  e.preventDefault();
+  const name = document.getElementById('onbName').value.trim();
+  if(!name) return;
+  const { count } = await sb.from('profiles').select('*', { count:'exact', head:true });
+  const role = (count === 0) ? 'trainer' : 'member';
+  const { data, error } = await sb.from('profiles').insert({
+    id: session.user.id, name, email: session.user.email, role
+  }).select().single();
+  if(error){ showToast('Aanmaken profiel mislukt: ' + error.message); return; }
+  profile = data;
+  authStage = 'idle';
+  activeTab = profile.role === 'trainer' ? 'overzicht' : 'lessen';
+  await loadDataForTab();
+  render();
+};
+
+window.signOut = async function(){
+  await sb.auth.signOut();
+  session = null; profile = null; activeTab = null; activeMemberId = null;
+  render();
+};
+
+/* ---------------- DATA LOADING ---------------- */
+
+async function fetchSettings(){
+  const { data } = await sb.from('settings').select('*').eq('id',1).maybeSingle();
+  if(data) settings = data;
+}
+
+async function loadDataForTab(){
+  if(!profile) return;
+  const isTrainer = profile.role === 'trainer';
+  if(activeMemberId){
+    await loadMemberDetail(activeMemberId);
+    return;
+  }
+  if(activeTab === 'overzicht'){
+    await Promise.all([loadClasses(), loadMembers(), loadAllTestsSummary()]);
+  } else if(activeTab === 'lessen'){
+    await loadClasses();
+    if(isTrainer) await loadAllSignups(); else await loadMySignups();
+  } else if(activeTab === 'leden'){
+    await loadMembers();
+  } else if(activeTab === 'testen'){
+    await loadMyTests();
+  } else if(activeTab === 'info'){
+    await loadInfo();
+  }
+}
+
+async function loadClasses(){
+  const { data } = await sb.from('classes').select('*').order('date').order('time');
+  classes = data || [];
+  const { data: counts } = await sb.rpc('class_signup_counts');
+  signupCounts = {};
+  (counts||[]).forEach(c => signupCounts[c.class_id] = c.cnt);
+}
+async function loadMySignups(){
+  const { data } = await sb.from('class_signups').select('class_id').eq('member_id', profile.id);
+  mySignups = (data||[]).map(r => r.class_id);
+}
+async function loadAllSignups(){
+  const { data } = await sb.from('class_signups').select('class_id, member_id');
+  allSignups = {};
+  (data||[]).forEach(r => { (allSignups[r.class_id] = allSignups[r.class_id]||[]).push(r.member_id); });
+}
+async function loadMembers(){
+  const { data } = await sb.from('profiles').select('*').order('name');
+  members = data || [];
+}
+async function loadMyTests(){
+  const { data } = await sb.from('tests').select('*').eq('member_id', profile.id).order('date');
+  myTests = data || [];
+}
+async function loadAllTestsSummary(){
+  const { data } = await sb.from('tests').select('*').order('date', {ascending:false}).limit(5);
+  viewedMemberTests = data || []; // reused for overview recent list
+}
+async function loadInfo(){
+  const { data } = await sb.from('info_posts').select('*').order('date', {ascending:false});
+  infoPosts = data || [];
+}
+async function loadMemberDetail(memberId){
+  if(members.length === 0) await loadMembers();
+  const { data } = await sb.from('tests').select('*').eq('member_id', memberId).order('date');
+  viewedMemberTests = data || [];
+}
+
+/* ---------------- CLASS ACTIONS ---------------- */
+
+window.setTab = async function(tab){
+  activeTab = tab; activeMemberId = null;
+  loading = true; render();
+  await loadDataForTab();
+  loading = false; render();
+};
+
+window.openMember = async function(id){
+  activeMemberId = id;
+  loading = true; render();
+  await loadMemberDetail(id);
+  loading = false; render();
+};
+
+window.handleAddClass = async function(e){
+  e.preventDefault();
+  const name = document.getElementById('clsName').value.trim();
+  const date = document.getElementById('clsDate').value;
+  const time = document.getElementById('clsTime').value;
+  const location = document.getElementById('clsLocation').value.trim();
+  const capacity = parseInt(document.getElementById('clsCapacity').value) || 10;
+  if(!name || !date) return;
+  const { error } = await sb.from('classes').insert({ name, date, time, location, capacity });
+  if(error){ showToast('Toevoegen mislukt: '+error.message); return; }
+  await loadClasses(); await loadAllSignups();
+  render();
+};
+window.deleteClass = async function(id){
+  await sb.from('classes').delete().eq('id', id);
+  await loadClasses(); await loadAllSignups();
+  render();
+};
+window.toggleEnroll = async function(classId){
+  const enrolled = mySignups.includes(classId);
+  if(enrolled){
+    await sb.from('class_signups').delete().eq('class_id', classId).eq('member_id', profile.id);
+  } else {
+    const cap = classes.find(c=>c.id===classId)?.capacity || 0;
+    if((signupCounts[classId]||0) >= cap){ showToast('Deze les zit vol.'); return; }
+    const { error } = await sb.from('class_signups').insert({ class_id: classId, member_id: profile.id });
+    if(error){ showToast('Inschrijven mislukt: '+error.message); return; }
+  }
+  await loadClasses(); await loadMySignups();
+  render();
+};
+window.removeMemberFromClass = async function(classId, memberId){
+  await sb.from('class_signups').delete().eq('class_id', classId).eq('member_id', memberId);
+  await loadClasses(); await loadAllSignups();
+  render();
+};
+
+/* ---------------- MEMBER / TEST ACTIONS ---------------- */
+
+window.deleteMember = async function(memberId){
+  await sb.from('profiles').delete().eq('id', memberId);
+  activeMemberId = null;
+  await loadMembers();
+  render();
+};
+
+window.autofillTestUnit = function(){
+  const label = document.getElementById('testLabel').value.trim().toLowerCase();
+  const unitField = document.getElementById('testUnit');
+  if(unitField.value.trim() !== '') return;
+  const map = { 'gewicht':'kg','vetpercentage':'%','spiermassa':'kg','bankdrukken 1rm':'kg','squat 1rm':'kg','deadlift 1rm':'kg','hardlopen 5km':'min' };
+  if(map[label]) unitField.value = map[label];
+};
+
+window.handleAddTest = async function(e, memberId){
+  e.preventDefault();
+  const label = document.getElementById('testLabel').value.trim();
+  const value = document.getElementById('testValue').value.trim();
+  const unit = document.getElementById('testUnit').value.trim();
+  const note = document.getElementById('testNote').value.trim();
+  const date = document.getElementById('testDate').value || todayStr();
+  if(!label || !value) return;
+  const { error } = await sb.from('tests').insert({ member_id: memberId, label, value, unit, note, date });
+  if(error){ showToast('Toevoegen mislukt: '+error.message); return; }
+  await loadMemberDetail(memberId);
+  render();
+};
+window.deleteTest = async function(memberId, testId){
+  await sb.from('tests').delete().eq('id', testId);
+  await loadMemberDetail(memberId);
+  render();
+};
+
+/* ---------------- INFO ---------------- */
+
+window.handleAddInfo = async function(e){
+  e.preventDefault();
+  const title = document.getElementById('infoTitle').value.trim();
+  const body = document.getElementById('infoBody').value.trim();
+  if(!title || !body) return;
+  const { error } = await sb.from('info_posts').insert({ title, body });
+  if(error){ showToast('Plaatsen mislukt: '+error.message); return; }
+  await loadInfo();
+  render();
+};
+window.deleteInfo = async function(id){
+  await sb.from('info_posts').delete().eq('id', id);
+  await loadInfo();
+  render();
+};
+
+/* ---------------- SETTINGS ---------------- */
+
+window.handleSettingsSave = async function(e){
+  e.preventDefault();
+  const studio_name = document.getElementById('setStudioName').value.trim() || 'PT Studio';
+  const tagline = document.getElementById('setTagline').value.trim();
+  const { error } = await sb.from('settings').update({ studio_name, tagline }).eq('id',1);
+  if(error){ showToast('Opslaan mislukt: '+error.message); return; }
+  settings = { id:1, studio_name, tagline };
+  render();
+  showToast('Instellingen opgeslagen.');
+};
+
+/* ---------------- RENDER ---------------- */
+
+function render(){
+  const app = document.getElementById('app');
+  if(loading){
+    app.innerHTML = `<div class="login-wrap"><div class="hint">Laden…</div></div>`;
+    return;
+  }
+  if(!session){
+    app.innerHTML = renderAuth();
+    return;
+  }
+  if(authStage === 'onboarding'){
+    app.innerHTML = renderOnboarding();
+    return;
+  }
+  if(!profile){
+    app.innerHTML = `<div class="login-wrap"><div class="hint">Laden…</div></div>`;
+    return;
+  }
+  app.innerHTML = renderShell();
+}
+
+function renderAuth(){
+  if(authStage === 'sent'){
+    return `
+    <div class="login-wrap">
+      <div class="login-card">
+        <div class="brand-eyebrow">${escapeHtml(settings.studio_name)}</div>
+        <h1 class="brand-title">Check je mailbox</h1>
+        <div class="brand-tagline">We stuurden een inloglink naar <strong>${escapeHtml(pendingEmail)}</strong>. Klik op de link in de mail om verder te gaan.</div>
+        <button class="btn ghost full" onclick="authStage='idle'; render();">Ander e-mailadres gebruiken</button>
+      </div>
+    </div>`;
+  }
+  return `
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="brand-eyebrow">${escapeHtml(settings.studio_name || 'PT Studio')}</div>
+      <h1 class="brand-title">Log in</h1>
+      <div class="brand-tagline">${escapeHtml(settings.tagline || 'Vul je e-mailadres in om een inloglink te ontvangen.')}</div>
+      <form onsubmit="handleSendLink(event)">
+        <div class="field">
+          <label>E-mailadres</label>
+          <input id="authEmail" type="email" required autofocus placeholder="jij@voorbeeld.be">
+        </div>
+        ${authError ? `<div class="error-msg">${escapeHtml(authError)}</div>` : ''}
+        <button class="btn full" type="submit">Stuur inloglink</button>
+      </form>
+      <div class="hint">Nieuw hier? Vul gewoon je e-mail in — je account wordt automatisch aangemaakt bij je eerste keer inloggen.</div>
+    </div>
+  </div>`;
+}
+
+function renderOnboarding(){
+  return `
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="brand-eyebrow">Bijna klaar</div>
+      <h1 class="brand-title">Hoe mogen we je noemen?</h1>
+      <div class="brand-tagline">Vul je naam in om je profiel af te ronden.</div>
+      <form onsubmit="handleOnboardingSubmit(event)">
+        <div class="field"><label>Naam</label><input id="onbName" type="text" required autofocus></div>
+        <button class="btn full" type="submit">Doorgaan</button>
+      </form>
+    </div>
+  </div>`;
+}
+
+function renderShell(){
+  const isTrainer = profile.role === 'trainer';
+  const trainerTabs = [['overzicht','Overzicht'],['lessen','Lessen'],['leden','Leden'],['info','Info'],['instellingen','Instellingen']];
+  const memberTabs = [['lessen','Lessen'],['testen','Mijn testen'],['info','Info']];
+  const tabs = isTrainer ? trainerTabs : memberTabs;
+
+  let content = '';
+  if(isTrainer && activeMemberId) content = renderMemberDetail(activeMemberId);
+  else if(activeTab === 'overzicht') content = renderOverview();
+  else if(activeTab === 'lessen') content = isTrainer ? renderClassesTrainer() : renderClassesMember();
+  else if(activeTab === 'leden') content = renderMembersList();
+  else if(activeTab === 'testen') content = renderMyTests();
+  else if(activeTab === 'info') content = renderInfo(isTrainer);
+  else if(activeTab === 'instellingen') content = renderSettings();
+
+  return `
+  <header class="top">
+    <div class="top-left">
+      <span class="display">${escapeHtml(settings.studio_name || 'PT Studio')}</span>
+      <span class="role-badge ${isTrainer?'trainer':''}">${isTrainer ? 'Trainer' : 'Lid'}</span>
+    </div>
+    <div class="top-right">
+      <span class="who">${escapeHtml(profile.name)}</span>
+      <button class="btn ghost small" onclick="signOut()">Uitloggen</button>
+    </div>
+  </header>
+  <nav class="tabs">
+    ${tabs.map(([key,label]) => `<button class="${activeTab===key && !activeMemberId ? 'active':''}" onclick="setTab('${key}')">${label}</button>`).join('')}
+  </nav>
+  <main>${content}</main>
+  `;
+}
+
+function renderOverview(){
+  return `
+    <h2 class="section-title">Overzicht</h2>
+    <div class="section-sub">Snel zicht op je studio.</div>
+    <div class="grid cols-3" style="margin-bottom:26px;">
+      <div class="stat-card"><div class="num">${members.length}</div><div class="lbl">Leden</div></div>
+      <div class="stat-card"><div class="num">${classes.length}</div><div class="lbl">Groepslessen</div></div>
+      <div class="stat-card"><div class="num">${viewedMemberTests.length}</div><div class="lbl">Recente tests</div></div>
+    </div>
+    <h3 style="margin-bottom:10px;">Recent toegevoegde testresultaten</h3>
+    ${viewedMemberTests.length === 0 ? `<div class="empty">Nog geen testresultaten ingevoerd.</div>` : `
+    <div class="card">
+      <table>
+        <tr><th>Datum</th><th>Lid</th><th>Test</th><th>Resultaat</th></tr>
+        ${viewedMemberTests.map(t => {
+          const m = members.find(x=>x.id===t.member_id);
+          return `<tr><td>${formatDate(t.date)}</td><td>${escapeHtml(m?m.name:'?')}</td><td>${escapeHtml(t.label)}</td><td class="mono">${escapeHtml(t.value)} ${escapeHtml(t.unit||'')}</td></tr>`;
+        }).join('')}
+      </table>
+    </div>`}
+  `;
+}
+
+function renderClassesTrainer(){
+  return `
+    <h2 class="section-title">Groepslessen</h2>
+    <div class="section-sub">Beheer je lessenrooster en zie wie is ingeschreven.</div>
+    <div class="card" style="margin-bottom:24px;">
+      <h3 style="margin-bottom:14px;">Nieuwe les toevoegen</h3>
+      <form onsubmit="handleAddClass(event)" class="inline-form">
+        <div class="field" style="min-width:160px;"><label>Naam</label><input id="clsName" type="text" placeholder="Bijv. Bootcamp" required></div>
+        <div class="field" style="min-width:150px;"><label>Datum</label><input id="clsDate" type="date" value="${todayStr()}" required></div>
+        <div class="field" style="min-width:100px;"><label>Uur</label><input id="clsTime" type="time" value="18:00"></div>
+        <div class="field" style="min-width:140px;"><label>Locatie</label><input id="clsLocation" type="text" placeholder="Bijv. Zaal 1"></div>
+        <div class="field" style="min-width:100px;"><label>Capaciteit</label><input id="clsCapacity" type="number" min="1" value="12"></div>
+        <button class="btn" type="submit">Toevoegen</button>
+      </form>
+    </div>
+    ${classes.length === 0 ? `<div class="empty"><div class="display">Nog geen lessen</div>Voeg hierboven je eerste groepsles toe.</div>` : `
+    <div class="grid cols-2">
+      ${classes.map(c => {
+        const enrolledIds = allSignups[c.id] || [];
+        return `
+        <div class="class-card">
+          <div class="class-top">
+            <div>
+              <div class="class-name">${escapeHtml(c.name)}</div>
+              <div class="class-meta">${weekdayName(c.date)} ${formatDate(c.date)} · ${escapeHtml(c.time?.slice(0,5)||'')} ${c.location ? '· '+escapeHtml(c.location) : ''}</div>
+            </div>
+            <span class="capacity-pill ${enrolledIds.length>=c.capacity?'full':'ok'}">${enrolledIds.length}/${c.capacity}</span>
+          </div>
+          <div>
+            ${enrolledIds.length === 0 ? `<span class="hint">Nog geen inschrijvingen.</span>` : enrolledIds.map(mid => {
+              const m = members.find(x=>x.id===mid);
+              return `<span class="member-chip">${escapeHtml(m?m.name:'?')}<button onclick="removeMemberFromClass('${c.id}','${mid}')">&times;</button></span>`;
+            }).join('')}
+          </div>
+          <div style="text-align:right;"><button class="btn ghost small" onclick="deleteClass('${c.id}')">Verwijder les</button></div>
+        </div>`;
+      }).join('')}
+    </div>`}
+  `;
+}
+
+function renderClassesMember(){
+  return `
+    <h2 class="section-title">Groepslessen</h2>
+    <div class="section-sub">Schrijf je in voor de lessen die passen in je schema.</div>
+    ${classes.length === 0 ? `<div class="empty"><div class="display">Nog geen lessen</div>Je trainer heeft nog geen groepslessen aangemaakt.</div>` : `
+    <div class="grid cols-2">
+      ${classes.map(c => {
+        const count = signupCounts[c.id] || 0;
+        const full = count >= c.capacity;
+        const enrolled = mySignups.includes(c.id);
+        return `
+        <div class="class-card">
+          <div class="class-top">
+            <div>
+              <div class="class-name">${escapeHtml(c.name)}</div>
+              <div class="class-meta">${weekdayName(c.date)} ${formatDate(c.date)} · ${escapeHtml(c.time?.slice(0,5)||'')} ${c.location ? '· '+escapeHtml(c.location) : ''}</div>
+            </div>
+            <span class="capacity-pill ${full?'full':'ok'}">${count}/${c.capacity}</span>
+          </div>
+          <button class="btn ${enrolled?'ghost':''} full" ${(!enrolled && full) ? 'disabled' : ''} onclick="toggleEnroll('${c.id}')">
+            ${enrolled ? 'Uitschrijven' : (full ? 'Volzet' : 'Inschrijven')}
+          </button>
+        </div>`;
+      }).join('')}
+    </div>`}
+  `;
+}
+
+function renderMembersList(){
+  return `
+    <h2 class="section-title">Leden</h2>
+    <div class="section-sub">Klik op een lid om testresultaten te bekijken of toe te voegen. Leden registreren zichzelf via de inloglink per e-mail.</div>
+    ${members.filter(m=>m.role==='member').length === 0 ? `<div class="empty"><div class="display">Nog geen leden</div>Zodra iemand zich aanmeldt met de link, verschijnt die persoon hier.</div>` : `
+    ${members.filter(m=>m.role==='member').map(m => `
+      <div class="member-row" onclick="openMember('${m.id}')">
+        <div>
+          <div class="name">${escapeHtml(m.name)}</div>
+          <div class="sub">${escapeHtml(m.email)} · Lid sinds ${formatDate(m.joined)}</div>
+        </div>
+      </div>
+    `).join('')}`}
+  `;
+}
+
+function renderMemberDetail(memberId){
+  const m = members.find(x=>x.id===memberId);
+  if(!m) return `<div class="empty">Lid niet gevonden.</div>`;
+  const tests = viewedMemberTests;
+  const grouped = {};
+  tests.forEach(t => { (grouped[t.label] = grouped[t.label]||[]).push(t); });
+
+  return `
+    <button class="back-link" onclick="setTab('leden')">&larr; Terug naar leden</button>
+    <h2 class="section-title">${escapeHtml(m.name)}</h2>
+    <div class="section-sub">${escapeHtml(m.email)} · Lid sinds ${formatDate(m.joined)}</div>
+
+    <div class="card" style="margin-bottom:24px; display:flex; justify-content:flex-end;">
+      <button class="btn danger small" onclick="deleteMember('${m.id}')">Lid verwijderen</button>
+    </div>
+
+    <div class="card" style="margin-bottom:24px;">
+      <h3 style="margin-bottom:14px;">Nieuw testresultaat toevoegen</h3>
+      <form onsubmit="handleAddTest(event, '${m.id}')" class="inline-form">
+        <div class="field" style="min-width:170px;">
+          <label>Test</label>
+          <input id="testLabel" type="text" list="testLabelSuggestions" placeholder="Bijv. Vetpercentage" required onchange="autofillTestUnit()">
+          <datalist id="testLabelSuggestions">
+            <option value="Gewicht"><option value="Vetpercentage"><option value="Spiermassa">
+            <option value="Bankdrukken 1RM"><option value="Squat 1RM"><option value="Deadlift 1RM"><option value="Hardlopen 5km">
+          </datalist>
+        </div>
+        <div class="field" style="min-width:90px;"><label>Waarde</label><input id="testValue" type="text" placeholder="80" required></div>
+        <div class="field" style="min-width:80px;"><label>Eenheid</label><input id="testUnit" type="text" placeholder="kg"></div>
+        <div class="field" style="min-width:130px;"><label>Datum</label><input id="testDate" type="date" value="${todayStr()}"></div>
+        <div class="field" style="min-width:150px;"><label>Notitie (optioneel)</label><input id="testNote" type="text" placeholder="Vorm goed"></div>
+        <button class="btn" type="submit">Toevoegen</button>
+      </form>
+    </div>
+
+    ${Object.keys(grouped).length === 0 ? `<div class="empty">Nog geen testresultaten voor dit lid.</div>` : `
+    <div class="grid cols-2">
+      ${Object.entries(grouped).map(([label, arr]) => renderScoreboard(label, arr, m.id, true)).join('')}
+    </div>`}
+  `;
+}
+
+function buildLineChart(sorted){
+  const pts = sorted.map(t => ({ date: t.date, v: parseFloat(t.value) })).filter(p => !isNaN(p.v));
+  if(pts.length < 2) return '';
+  const width = 320, height = 130, padX = 14, padY = 18;
+  let minV = Math.min(...pts.map(p=>p.v));
+  let maxV = Math.max(...pts.map(p=>p.v));
+  if(minV === maxV){ minV -= 1; maxV += 1; }
+  const xStep = (width - padX*2) / (pts.length - 1);
+  const coords = pts.map((p,i) => {
+    const x = padX + i*xStep;
+    const y = height - padY - ((p.v - minV)/(maxV - minV)) * (height - padY*2);
+    return { x, y, v: p.v, date: p.date };
+  });
+  const pathD = coords.map((c,i) => (i===0?'M':'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
+  const areaD = pathD + ` L${coords[coords.length-1].x.toFixed(1)},${height-padY} L${coords[0].x.toFixed(1)},${height-padY} Z`;
+  const circles = coords.map(c => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3.5" fill="var(--amber)" stroke="var(--ink-2)" stroke-width="1.5"><title>${escapeHtml(formatDate(c.date))}: ${escapeHtml(String(c.v))}</title></circle>`).join('');
+  return `
+    <svg viewBox="0 0 ${width} ${height+16}" style="width:100%; height:auto; display:block; margin-top:10px;">
+      <line x1="${padX}" y1="${height-padY}" x2="${width-padX}" y2="${height-padY}" stroke="var(--line)" stroke-width="1"/>
+      <path d="${areaD}" fill="rgba(242,169,59,0.12)" stroke="none"/>
+      <path d="${pathD}" fill="none" stroke="var(--amber)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${circles}
+      <text x="${padX}" y="${height+12}" fill="var(--muted)" font-size="10" font-family="IBM Plex Mono, monospace">${escapeHtml(formatDate(coords[0].date))}</text>
+      <text x="${width-padX}" y="${height+12}" fill="var(--muted)" font-size="10" font-family="IBM Plex Mono, monospace" text-anchor="end">${escapeHtml(formatDate(coords[coords.length-1].date))}</text>
+    </svg>`;
+}
+
+function renderScoreboard(label, arr, memberId, trainerView){
+  const sorted = [...arr].sort((a,b)=> a.date.localeCompare(b.date));
+  const latest = sorted[sorted.length-1];
+  const prev = sorted[sorted.length-2];
+  let deltaHtml = '';
+  if(prev){
+    const diff = parseFloat(latest.value) - parseFloat(prev.value);
+    if(!isNaN(diff)) deltaHtml = `<span class="delta ${diff<0?'neg':''}">${diff>0?'+':''}${diff.toFixed(1)}</span>`;
+  }
+  const chart = buildLineChart(sorted);
+  return `
+    <div class="scoreboard">
+      <div class="label">${escapeHtml(label)}</div>
+      <div class="big">
+        <span class="val">${escapeHtml(latest.value)}</span>
+        <span class="unit">${escapeHtml(latest.unit||'')}</span>
+        ${deltaHtml}
+      </div>
+      <div class="date">Laatst gemeten op ${formatDate(latest.date)}${latest.note? ' · '+escapeHtml(latest.note):''}</div>
+      ${chart || (sorted.length===1 ? `<div class="hint">Nog maar 1 meting — de grafiek verschijnt vanaf de tweede meting.</div>` : '')}
+      ${sorted.length>1 ? `
+      <table style="margin-top:12px;">
+        <tr><th>Datum</th><th>Waarde</th>${trainerView?'<th></th>':''}</tr>
+        ${sorted.slice().reverse().map(t=>`<tr><td>${formatDate(t.date)}</td><td class="mono">${escapeHtml(t.value)} ${escapeHtml(t.unit||'')}</td>${trainerView?`<td style="text-align:right;"><button class="btn ghost small" onclick="deleteTest('${memberId}','${t.id}')">Verwijder</button></td>`:''}</tr>`).join('')}
+      </table>` : ''}
+    </div>`;
+}
+
+function renderMyTests(){
+  const grouped = {};
+  myTests.forEach(t => { (grouped[t.label] = grouped[t.label]||[]).push(t); });
+  return `
+    <h2 class="section-title">Mijn testen</h2>
+    <div class="section-sub">Enkel jij en je trainer kunnen deze resultaten zien.</div>
+    ${Object.keys(grouped).length === 0 ? `<div class="empty"><div class="display">Nog geen resultaten</div>Je trainer voegt hier je testresultaten toe zodra ze gemeten zijn.</div>` : `
+    <div class="grid cols-2">
+      ${Object.entries(grouped).map(([label, arr]) => renderScoreboard(label, arr, profile.id, false)).join('')}
+    </div>`}
+  `;
+}
+
+function renderInfo(isTrainer){
+  return `
+    <h2 class="section-title">Info</h2>
+    <div class="section-sub">Tips, aankondigingen en extra informatie.</div>
+    ${isTrainer ? `
+    <div class="card" style="margin-bottom:24px;">
+      <h3 style="margin-bottom:14px;">Nieuw bericht plaatsen</h3>
+      <form onsubmit="handleAddInfo(event)">
+        <div class="field"><label>Titel</label><input id="infoTitle" type="text" required></div>
+        <div class="field"><label>Tekst</label><textarea id="infoBody" rows="4" required></textarea></div>
+        <button class="btn" type="submit">Plaatsen</button>
+      </form>
+    </div>` : ''}
+    ${infoPosts.length === 0 ? `<div class="empty">Nog geen berichten geplaatst.</div>` : infoPosts.map(i => `
+      <div class="info-post">
+        <h3>${escapeHtml(i.title)}</h3>
+        <div class="date">${formatDate(i.date)}</div>
+        <p>${escapeHtml(i.body)}</p>
+        ${isTrainer ? `<div style="text-align:right; margin-top:10px;"><button class="btn ghost small" onclick="deleteInfo('${i.id}')">Verwijder</button></div>` : ''}
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderSettings(){
+  return `
+    <h2 class="section-title">Instellingen</h2>
+    <div class="section-sub">Pas de naam en tagline van je studio aan.</div>
+    <div class="card" style="max-width:480px;">
+      <form onsubmit="handleSettingsSave(event)">
+        <div class="field"><label>Studionaam</label><input id="setStudioName" type="text" value="${escapeHtml(settings.studio_name)}" required></div>
+        <div class="field"><label>Tagline (op inlogscherm)</label><input id="setTagline" type="text" value="${escapeHtml(settings.tagline||'')}" placeholder="Bijv. Sterker worden, samen."></div>
+        <button class="btn" type="submit">Opslaan</button>
+      </form>
+    </div>
+  `;
+}
+
+init();
+</script>
+</body>
+</html>
